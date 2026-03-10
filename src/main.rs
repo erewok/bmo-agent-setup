@@ -143,20 +143,20 @@ fn print_instructions(output_dir: &PathBuf) -> Result<()> {
     info!("\n✅ Claude Code environment created successfully!\n");
     info!("To install on your machine:\n");
     info!("  1. Copy agent definitions:");
-    info!("     cp -r {}/agents ~/.config/claude-code/", abs_path.display());
+    info!("     cp -r {}/agents ~/.claude/", abs_path.display());
     info!("");
     info!("  2. Copy skills:");
-    info!("     cp -r {}/skills ~/.config/claude-code/", abs_path.display());
+    info!("     cp -r {}/skills ~/.claude/", abs_path.display());
     info!("");
     info!("  3. Copy settings:");
-    info!("     cp {}/claude.settings.json ~/.config/claude-code/", abs_path.display());
+    info!("     cp {}/claude.settings.json ~/.claude/", abs_path.display());
     info!("");
     info!("  4. Copy statusline script:");
-    info!("     cp {}/statusline.sh ~/.config/claude-code/", abs_path.display());
+    info!("     cp {}/statusline.sh ~/.claude/", abs_path.display());
     info!("");
     info!("Or run all at once:");
-    info!("  cp -r {}/{{agents,skills}} ~/.config/claude-code/ && \\", abs_path.display());
-    info!("  cp {}/{{claude.settings.json,statusline.sh}} ~/.config/claude-code/", abs_path.display());
+    info!("  cp -r {}/{{agents,skills}} ~/.claude/ && \\", abs_path.display());
+    info!("  cp {}/{{claude.settings.json,statusline.sh}} ~/.claude/", abs_path.display());
     info!("");
 
     Ok(())
