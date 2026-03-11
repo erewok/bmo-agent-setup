@@ -16,6 +16,8 @@ test:
 
 # Check the project for errors without producing output
 check:
+    just fmt-check
+    just lint
     cargo check --all
 
 # Format all source files in place

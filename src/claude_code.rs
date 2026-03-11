@@ -522,3 +522,9 @@ impl ClaudeCode {
         Ok(self)
     }
 }
+
+impl Default for ClaudeCode {
+    fn default() -> Self {
+        Self::new()
+    }
+}

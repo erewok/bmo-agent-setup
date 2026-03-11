@@ -3,9 +3,8 @@ use bmo_agent_setup::claude_code::ClaudeCode;
 use bmo_agent_setup::config::ConfigFile;
 use clap::Parser;
 use std::fs;
-use std::path::PathBuf;
+use std::path::Path;
 use tracing::{debug, info};
-use tracing_subscriber;
 
 /// Setup Claude Code environment with agents, skills, and configuration
 #[derive(Parser, Debug)]
@@ -13,11 +12,11 @@ use tracing_subscriber;
 struct Args {
     /// Output directory for Claude Code setup
     #[arg(short, long, default_value = "./claude-code-env")]
-    output: PathBuf,
+    output: String,
 
     /// Path to TOML configuration file
     #[arg(short, long)]
-    config: Option<PathBuf>,
+    config: Option<String>,
 
     /// Enable statusline in claude.settings.json (overrides config file)
     #[arg(long)]
@@ -35,15 +34,13 @@ fn main() -> Result<()> {
     let args = Args::parse();
     let output_dir = &args.output;
 
-    info!(
-        "Setting up Claude Code environment in: {}",
-        output_dir.display()
-    );
+    info!("Setting up Claude Code environment in: {}", output_dir);
 
     // Create output directory structure
-    fs::create_dir_all(output_dir)?;
-    let agents_dir = output_dir.join("agents");
-    let skills_dir = output_dir.join("skills");
+    let output_path = Path::new(output_dir);
+    fs::create_dir_all(output_path)?;
+    let agents_dir = output_path.join("agents");
+    let skills_dir = output_path.join("skills");
     fs::create_dir_all(&agents_dir)?;
     fs::create_dir_all(&skills_dir)?;
 
@@ -57,7 +54,7 @@ fn main() -> Result<()> {
 
     // Generate claude.settings.json
     info!("⚙️  Generating claude.settings.json...");
-    generate_settings(output_dir, &args)?;
+    generate_settings(output_path, &args)?;
 
     // Copy statusline script (if enabled via CLI or config)
     let copy_statusline_script = args.with_statusline.unwrap_or(false)
@@ -65,11 +62,11 @@ fn main() -> Result<()> {
 
     if copy_statusline_script {
         info!("📊 Copying statusline script...");
-        copy_statusline(output_dir)?;
+        copy_statusline(output_path)?;
     }
 
     // Print installation instructions
-    print_instructions(output_dir, &args, copy_statusline_script)?;
+    print_instructions(output_path, &args, copy_statusline_script)?;
 
     Ok(())
 }
@@ -83,13 +80,13 @@ fn has_statusline_in_config(args: &Args) -> Result<bool> {
     }
 }
 
-fn copy_agents(agents_dir: &PathBuf) -> Result<()> {
-    let source_agents = PathBuf::from("agents");
+fn copy_agents(agents_dir: &Path) -> Result<()> {
+    let source_agents = Path::new("agents");
 
-    for entry in fs::read_dir(&source_agents)? {
+    for entry in fs::read_dir(source_agents)? {
         let entry = entry?;
         let filename = entry.file_name();
-        if entry.path().extension().map_or(false, |ext| ext == "md") {
+        if entry.path().extension().is_some_and(|ext| ext == "md") {
             fs::copy(entry.path(), agents_dir.join(&filename))
                 .with_context(|| format!("Failed to copy {}", filename.to_string_lossy()))?;
             debug!("  ✓ {}", filename.to_string_lossy());
@@ -99,8 +96,8 @@ fn copy_agents(agents_dir: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn copy_skills(skills_dir: &PathBuf) -> Result<()> {
-    let source_skills = PathBuf::from("skills");
+fn copy_skills(skills_dir: &Path) -> Result<()> {
+    let source_skills = Path::new("skills");
 
     // Copy dev-init
     if source_skills.join("dev-init").exists() {
@@ -123,7 +120,7 @@ fn copy_skills(skills_dir: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> Result<()> {
+fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<()> {
     fs::create_dir_all(dst)?;
 
     for entry in fs::read_dir(src)? {
@@ -141,14 +138,14 @@ fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn generate_settings(output_dir: &PathBuf, args: &Args) -> Result<()> {
+fn generate_settings(output_dir: &Path, args: &Args) -> Result<()> {
     let mut builder = ClaudeCode::new();
 
     // Load config file if provided
     if let Some(ref config_path) = args.config {
-        info!("📄 Loading configuration from: {}", config_path.display());
+        info!("📄 Loading configuration from: {}", config_path);
         let config = ConfigFile::from_file(config_path)
-            .with_context(|| format!("Failed to load config file: {}", config_path.display()))?;
+            .with_context(|| format!("Failed to load config file: {}", config_path))?;
         builder = config.apply_to_builder(builder);
     }
 
@@ -182,7 +179,7 @@ fn generate_settings(output_dir: &PathBuf, args: &Args) -> Result<()> {
     build_and_write_settings(builder, output_dir)
 }
 
-fn build_and_write_settings(builder: ClaudeCode, output_dir: &PathBuf) -> Result<()> {
+fn build_and_write_settings(builder: ClaudeCode, output_dir: &Path) -> Result<()> {
     let settings = builder.build()?;
     let settings_json = serde_json::to_string_pretty(&settings)?;
     fs::write(output_dir.join("claude.settings.json"), settings_json)?;
@@ -190,11 +187,11 @@ fn build_and_write_settings(builder: ClaudeCode, output_dir: &PathBuf) -> Result
     Ok(())
 }
 
-fn copy_statusline(output_dir: &PathBuf) -> Result<()> {
-    let source_statusline = PathBuf::from("src/statusline.sh");
+fn copy_statusline(output_dir: &Path) -> Result<()> {
+    let source_statusline = Path::new("src/statusline.sh");
     let dest_statusline = output_dir.join("statusline.sh");
 
-    fs::copy(&source_statusline, &dest_statusline).context("Failed to copy statusline.sh")?;
+    fs::copy(source_statusline, &dest_statusline).context("Failed to copy statusline.sh")?;
 
     // Make executable
     #[cfg(unix)]
@@ -209,8 +206,10 @@ fn copy_statusline(output_dir: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn print_instructions(output_dir: &PathBuf, _args: &Args, has_statusline: bool) -> Result<()> {
-    let abs_path = output_dir.canonicalize().unwrap_or(output_dir.clone());
+fn print_instructions(output_dir: &Path, _args: &Args, has_statusline: bool) -> Result<()> {
+    let abs_path = output_dir
+        .canonicalize()
+        .unwrap_or(output_dir.to_path_buf());
 
     info!("\n✅ Claude Code environment created successfully!\n");
     info!("To install on your machine:\n");
