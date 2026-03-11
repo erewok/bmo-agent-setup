@@ -186,6 +186,11 @@
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
+   This repository includes material adapted from
+   https://github.com/ALT-F4-LLC/dotfiles.vorpal
+   (Copyright ALT-F4-LLC contributors), licensed under the
+   Apache License, Version 2.0.
+
    Copyright 2025 Erik Aker
 
    Licensed under the Apache License, Version 2.0 (the "License");

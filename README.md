@@ -6,12 +6,19 @@ A CLI tool to configure a Claude Code environment with [BMO](https://github.com/
 
 ## Attribution
 
-> **All credit for the agents, skills, and core ideas belongs to
-> [ALT-F4-LLC/dotfiles.vorpal](https://github.com/ALT-F4-LLC/dotfiles.vorpal).**
+This repository includes code and Markdown content adapted from
+[ALT-F4-LLC/dotfiles.vorpal](https://github.com/ALT-F4-LLC/dotfiles.vorpal).
+
+- Original project: `https://github.com/ALT-F4-LLC/dotfiles.vorpal`
+- Upstream license: Apache License 2.0
+- Attribution details for this repository: see [NOTICE](NOTICE)
+
+Substantial credit for the agent, skill, and workflow design belongs to the
+`dotfiles.vorpal` maintainers and contributors. This repository contains
+modifications and simplifications focused on a standalone Claude Code setup tool,
+and is not an official ALT-F4-LLC project.
 
 The code in this repository was written by [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
-
-The repo owner adapted concepts from `dotfiles.vorpal` to create this simplified setup tool focusing purely on a claude-code environment. For the origin of ideas in here, visit [ALT-F4-LLC/dotfiles.vorpal](https://github.com/ALT-F4-LLC/dotfiles.vorpal).
 
 ---
 
@@ -208,4 +215,7 @@ GitHub: https://github.com/erewok/bmo-agent-setup
 
 ## License
 
-[Apache License 2.0](LICENSE)
+This project is licensed under the [Apache License 2.0](LICENSE).
+
+Additional third-party attribution and adaptation notes are documented in
+[NOTICE](NOTICE).

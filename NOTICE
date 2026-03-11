@@ -1,0 +1,13 @@
+bmo-agent-setup
+Copyright 2025 Erik Aker
+
+This product includes software and content adapted from:
+  dotfiles.vorpal - https://github.com/ALT-F4-LLC/dotfiles.vorpal
+  Copyright ALT-F4-LLC contributors
+  Licensed under the Apache License, Version 2.0
+
+Modifications in this repository include simplification and extraction of
+Claude Code agent and skill setup behavior into a standalone CLI.
+
+This NOTICE file is provided for attribution purposes only and does not modify
+the Apache License, Version 2.0 terms that apply to this repository.
