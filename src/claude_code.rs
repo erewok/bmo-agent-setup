@@ -82,7 +82,6 @@ pub struct McpServerRule {
     pub server_url: Option<String>,
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatusLine {
     #[serde(rename = "type")]

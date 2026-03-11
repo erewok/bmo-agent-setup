@@ -1,0 +1,117 @@
+# BMO Agent Setup Configuration
+# This is an example configuration file showing all available options
+# Copy this file and customize it for your needs
+
+[core]
+# Model to use (optional)
+# model = "claude-sonnet-4"
+
+# Output style (optional)
+# output-style = "concise"
+
+# Enable always-thinking mode (default: true when using config)
+thinking-enabled = true
+
+# Enable fast mode (optional)
+# fast-mode = false
+
+# API key helper command (optional)
+# api-key-helper = "op read op://Private/anthropic/api-key"
+
+# Cleanup period in days (optional)
+# cleanup-period-days = 7
+
+# Environment variables (optional)
+# [core.env]
+# CUSTOM_VAR = "value"
+
+[statusline]
+# Enable statusline
+enabled = true
+
+# Custom command path (optional, defaults to $HOME/.claude/statusline.sh)
+# command = "/custom/path/to/statusline.sh"
+
+# Padding (optional)
+padding = 2
+
+[permissions]
+# Default permission mode: "allow", "ask", or "deny"
+default-mode = "ask"
+
+# Permission rules (globs)
+allow = [
+    "read:*",
+]
+
+ask = [
+    "write:*",
+    "run:*",
+]
+
+deny = [
+    "write:/etc/**",
+    "write:/usr/**",
+]
+
+# Additional directories accessible to agent (optional)
+# additional-directories = ["/path/to/extra/dir"]
+
+[sandbox]
+# Enable sandbox mode
+enabled = false
+
+# Auto-allow bash if sandboxed
+# auto-allow-bash = true
+
+# Allow unsandboxed commands
+# allow-unsandboxed-commands = false
+
+# Commands excluded from sandbox (optional)
+# excluded-commands = ["git", "cargo"]
+
+[sandbox.network]
+# Allowed network domains
+allowed-domains = [
+    "github.com",
+    "api.anthropic.com",
+]
+
+# Allow Unix sockets (optional)
+# allow-unix-sockets = ["/var/run/docker.sock"]
+
+# Allow local port binding
+# allow-local-binding = true
+
+[attribution]
+# Git commit template (optional)
+# commit = "Co-authored-by: Claude <claude@anthropic.com>"
+
+# Pull request template (optional)
+# pr = "Assisted by Claude Code"
+
+# Include co-authored-by in commits
+# include-co-authored-by = true
+
+[mcp]
+# Enable all project MCP servers
+enable-all-project-servers = false
+
+# Specifically enabled MCP servers
+enabled-servers = [
+    "filesystem",
+]
+
+# Specifically disabled MCP servers
+# disabled-servers = ["some-server"]
+
+# Example hook configuration (optional)
+# [[hooks.onFileCreate]]
+# matcher = "*.rs"
+# command = "rustfmt"
+# type = "sync"
+#
+# [[hooks.onFileCreate]]
+# matcher = "*.py"
+# command = "black"
+# type = "sync"

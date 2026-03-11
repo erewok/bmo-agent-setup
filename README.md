@@ -1,6 +1,6 @@
 # bmo-agent-setup
 
-A CLI tool to configure a Claude Code environment with BMO.
+A CLI tool to configure a Claude Code environment with [BMO](https://github.com/erewok/bmo).
 
 ---
 
@@ -17,7 +17,7 @@ The repo owner adapted concepts from `dotfiles.vorpal` to create this simplified
 
 ## Overview
 
-`bmo-agent-setup` generates a directory containing everything you need to run a BMO-powered
+`bmo-agent-setup` generates a directory containing everything you need to run a [BMO](https://github.com/erewok/bmo)-powered
 Claude Code agent team:
 
 - **agents/** — Five agent definition files (Markdown prompts consumed by Claude Code)
@@ -74,14 +74,42 @@ the `dev-team` skill or any individual agent, they manage work through `bmo`.
 - Rust toolchain (stable, 1.70+)
 - macOS or Linux
 
+### Quick Start
+
+**Basic setup (no customization):**
+```bash
+cargo run --release
+```
+
+**With statusline:**
+```bash
+cargo run --release -- --with-statusline=true
+```
+
+**Using a configuration file (recommended for complex setups):**
+```bash
+cargo run --release -- --config bmo-config.toml
+```
+
+See [CONFIG.md](CONFIG.md) for detailed configuration documentation.
+
 ### Build and Run
 
 ```bash
 # Build
 cargo build --release
 
-# Run
+# Run with defaults
+cargo run --release
+
+# Run with custom output directory
 cargo run --release -- --output ~/my-claude-env
+
+# Run with configuration file
+cargo run --release -- --config bmo-config.toml
+
+# Run with CLI overrides
+cargo run --release -- --config bmo-config.toml --with-thinking=false
 
 # Or with justfile
 just run
@@ -93,8 +121,21 @@ just run ~/my-claude-env
 | Flag | Description | Default |
 |---|---|---|
 | `-o`, `--output <PATH>` | Output directory for the generated environment | `./claude-code-env` |
+| `-c`, `--config <FILE>` | Path to TOML configuration file | None |
+| `--with-statusline <BOOL>` | Enable/disable statusline (overrides config) | `false` (or from config) |
+| `--with-thinking <BOOL>` | Enable/disable always-thinking mode (overrides config) | `true` (or from config) |
 | `-h`, `--help` | Print help | |
 | `-V`, `--version` | Print version | |
+
+### Configuration Files
+
+Three example configurations are included:
+
+- **`bmo-config.toml`** - Full configuration with all options documented
+- **`bmo-config.minimal.toml`** - Minimal config with just the essentials
+- **`bmo-config.secure.toml`** - Maximum security for sensitive environments
+
+For complete configuration documentation, see [CONFIG.md](CONFIG.md).
 
 ---
 

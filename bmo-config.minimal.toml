@@ -1,0 +1,10 @@
+# Minimal BMO Configuration - Just the essentials
+
+[core]
+thinking-enabled = true
+
+[statusline]
+enabled = true
+
+[permissions]
+default-mode = "ask"

@@ -1,0 +1,54 @@
+# Secure/Restricted BMO Configuration - Maximum safety for sensitive environments
+
+[core]
+thinking-enabled = true
+fast-mode = false
+
+[statusline]
+enabled = true
+
+[permissions]
+default-mode = "ask"
+
+# Very restrictive - only allow reading
+allow = [
+    "read:src/**",
+    "read:tests/**",
+    "read:docs/**",
+]
+
+# Require approval for all modifications
+ask = [
+    "write:*",
+    "run:*",
+]
+
+# Explicitly deny dangerous operations
+deny = [
+    "write:/etc/**",
+    "write:/usr/**",
+    "write:/bin/**",
+    "write:/sbin/**",
+    "write:~/.ssh/**",
+    "write:~/.aws/**",
+    "run:rm *",
+    "run:sudo *",
+]
+
+[sandbox]
+enabled = true
+auto-allow-bash = false
+allow-unsandboxed-commands = false
+
+[sandbox.network]
+# Only allow essential domains
+allowed-domains = [
+    "api.anthropic.com",
+]
+
+allow-local-binding = false
+
+[mcp]
+enable-all-project-servers = false
+# Only explicitly approved servers
+enabled-servers = []

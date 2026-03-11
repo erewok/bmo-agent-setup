@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
-use clap::Parser;
 use bmo_agent_setup::claude_code::ClaudeCode;
+use bmo_agent_setup::config::ConfigFile;
+use clap::Parser;
 use std::fs;
 use std::path::PathBuf;
 use tracing::{debug, info};
@@ -13,6 +14,18 @@ struct Args {
     /// Output directory for Claude Code setup
     #[arg(short, long, default_value = "./claude-code-env")]
     output: PathBuf,
+
+    /// Path to TOML configuration file
+    #[arg(short, long)]
+    config: Option<PathBuf>,
+
+    /// Enable statusline in claude.settings.json (overrides config file)
+    #[arg(long)]
+    with_statusline: Option<bool>,
+
+    /// Enable always-thinking mode (overrides config file)
+    #[arg(long)]
+    with_thinking: Option<bool>,
 }
 
 fn main() -> Result<()> {
@@ -22,7 +35,10 @@ fn main() -> Result<()> {
     let args = Args::parse();
     let output_dir = &args.output;
 
-    info!("Setting up Claude Code environment in: {}", output_dir.display());
+    info!(
+        "Setting up Claude Code environment in: {}",
+        output_dir.display()
+    );
 
     // Create output directory structure
     fs::create_dir_all(output_dir)?;
@@ -41,16 +57,30 @@ fn main() -> Result<()> {
 
     // Generate claude.settings.json
     info!("⚙️  Generating claude.settings.json...");
-    generate_settings(output_dir)?;
+    generate_settings(output_dir, &args)?;
 
-    // Copy statusline script
-    info!("📊 Copying statusline script...");
-    copy_statusline(output_dir)?;
+    // Copy statusline script (if enabled via CLI or config)
+    let copy_statusline_script = args.with_statusline.unwrap_or(false)
+        || (args.config.is_some() && has_statusline_in_config(&args)?);
+
+    if copy_statusline_script {
+        info!("📊 Copying statusline script...");
+        copy_statusline(output_dir)?;
+    }
 
     // Print installation instructions
-    print_instructions(output_dir)?;
+    print_instructions(output_dir, &args, copy_statusline_script)?;
 
     Ok(())
+}
+
+fn has_statusline_in_config(args: &Args) -> Result<bool> {
+    if let Some(ref config_path) = args.config {
+        let config = ConfigFile::from_file(config_path)?;
+        Ok(config.statusline.map(|s| s.enabled).unwrap_or(false))
+    } else {
+        Ok(false)
+    }
 }
 
 fn copy_agents(agents_dir: &PathBuf) -> Result<()> {
@@ -74,13 +104,19 @@ fn copy_skills(skills_dir: &PathBuf) -> Result<()> {
 
     // Copy dev-init
     if source_skills.join("dev-init").exists() {
-        copy_dir_recursive(&source_skills.join("dev-init"), &skills_dir.join("dev-init"))?;
+        copy_dir_recursive(
+            &source_skills.join("dev-init"),
+            &skills_dir.join("dev-init"),
+        )?;
         debug!("  ✓ dev-init/");
     }
 
     // Copy dev-team
     if source_skills.join("dev-team").exists() {
-        copy_dir_recursive(&source_skills.join("dev-team"), &skills_dir.join("dev-team"))?;
+        copy_dir_recursive(
+            &source_skills.join("dev-team"),
+            &skills_dir.join("dev-team"),
+        )?;
         debug!("  ✓ dev-team/");
     }
 
@@ -105,15 +141,52 @@ fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn generate_settings(output_dir: &PathBuf) -> Result<()> {
-    let settings = ClaudeCode::new()
-        .with_always_thinking_enabled(true)
-        .build()?;
+fn generate_settings(output_dir: &PathBuf, args: &Args) -> Result<()> {
+    let mut builder = ClaudeCode::new();
 
+    // Load config file if provided
+    if let Some(ref config_path) = args.config {
+        info!("📄 Loading configuration from: {}", config_path.display());
+        let config = ConfigFile::from_file(config_path)
+            .with_context(|| format!("Failed to load config file: {}", config_path.display()))?;
+        builder = config.apply_to_builder(builder);
+    }
+
+    // CLI overrides
+    // If no config file is provided, apply defaults
+    if args.config.is_none() {
+        // Default: enable thinking
+        builder = builder.with_always_thinking_enabled(args.with_thinking.unwrap_or(true));
+    } else {
+        // With config file: only apply CLI if explicitly set
+        if let Some(thinking) = args.with_thinking {
+            builder = builder.with_always_thinking_enabled(thinking);
+        }
+    }
+
+    // Statusline CLI override or default behavior
+    let statusline_enabled = if let Some(enabled) = args.with_statusline {
+        enabled
+    } else if args.config.is_none() {
+        false // Default: disabled
+    } else {
+        // Config file handled it, don't override
+        return build_and_write_settings(builder, output_dir);
+    };
+
+    if statusline_enabled {
+        let statusline_path = format!("{}/.claude/statusline.sh", std::env::var("HOME")?);
+        builder = builder.with_status_line(&statusline_path);
+    }
+
+    build_and_write_settings(builder, output_dir)
+}
+
+fn build_and_write_settings(builder: ClaudeCode, output_dir: &PathBuf) -> Result<()> {
+    let settings = builder.build()?;
     let settings_json = serde_json::to_string_pretty(&settings)?;
     fs::write(output_dir.join("claude.settings.json"), settings_json)?;
     debug!("  ✓ claude.settings.json");
-
     Ok(())
 }
 
@@ -121,8 +194,7 @@ fn copy_statusline(output_dir: &PathBuf) -> Result<()> {
     let source_statusline = PathBuf::from("src/statusline.sh");
     let dest_statusline = output_dir.join("statusline.sh");
 
-    fs::copy(&source_statusline, &dest_statusline)
-        .context("Failed to copy statusline.sh")?;
+    fs::copy(&source_statusline, &dest_statusline).context("Failed to copy statusline.sh")?;
 
     // Make executable
     #[cfg(unix)]
@@ -137,7 +209,7 @@ fn copy_statusline(output_dir: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn print_instructions(output_dir: &PathBuf) -> Result<()> {
+fn print_instructions(output_dir: &PathBuf, _args: &Args, has_statusline: bool) -> Result<()> {
     let abs_path = output_dir.canonicalize().unwrap_or(output_dir.clone());
 
     info!("\n✅ Claude Code environment created successfully!\n");
@@ -149,14 +221,36 @@ fn print_instructions(output_dir: &PathBuf) -> Result<()> {
     info!("     cp -r {}/skills ~/.claude/", abs_path.display());
     info!("");
     info!("  3. Copy settings:");
-    info!("     cp {}/claude.settings.json ~/.claude/", abs_path.display());
+    info!(
+        "     cp {}/claude.settings.json ~/.claude/",
+        abs_path.display()
+    );
     info!("");
-    info!("  4. Copy statusline script:");
-    info!("     cp {}/statusline.sh ~/.claude/", abs_path.display());
-    info!("");
-    info!("Or run all at once:");
-    info!("  cp -r {}/{{agents,skills}} ~/.claude/ && \\", abs_path.display());
-    info!("  cp {}/{{claude.settings.json,statusline.sh}} ~/.claude/", abs_path.display());
+
+    if has_statusline {
+        info!("  4. Copy statusline script:");
+        info!("     cp {}/statusline.sh ~/.claude/", abs_path.display());
+        info!("");
+        info!("Or run all at once:");
+        info!(
+            "  cp -r {}/{{agents,skills}} ~/.claude/ && \\",
+            abs_path.display()
+        );
+        info!(
+            "  cp {}/{{claude.settings.json,statusline.sh}} ~/.claude/",
+            abs_path.display()
+        );
+    } else {
+        info!("Or run all at once:");
+        info!(
+            "  cp -r {}/{{agents,skills}} ~/.claude/ && \\",
+            abs_path.display()
+        );
+        info!(
+            "  cp {}/claude.settings.json ~/.claude/",
+            abs_path.display()
+        );
+    }
     info!("");
 
     Ok(())
