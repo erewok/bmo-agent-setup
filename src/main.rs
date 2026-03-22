@@ -182,8 +182,8 @@ fn generate_settings(output_dir: &Path, args: &Args) -> Result<()> {
 fn build_and_write_settings(builder: ClaudeCode, output_dir: &Path) -> Result<()> {
     let settings = builder.build()?;
     let settings_json = serde_json::to_string_pretty(&settings)?;
-    fs::write(output_dir.join("claude.settings.json"), settings_json)?;
-    debug!("  ✓ claude.settings.json");
+    fs::write(output_dir.join("settings.json"), settings_json)?;
+    debug!("  ✓ settings.json");
     Ok(())
 }
 
@@ -211,46 +211,43 @@ fn print_instructions(output_dir: &Path, _args: &Args, has_statusline: bool) -> 
         .canonicalize()
         .unwrap_or(output_dir.to_path_buf());
 
-    info!("\n✅ Claude Code environment created successfully!\n");
-    info!("To install on your machine:\n");
-    info!("  1. Copy agent definitions:");
-    info!("     cp -r {}/agents ~/.claude/", abs_path.display());
-    info!("");
-    info!("  2. Copy skills:");
-    info!("     cp -r {}/skills ~/.claude/", abs_path.display());
-    info!("");
-    info!("  3. Copy settings:");
-    info!(
-        "     cp {}/claude.settings.json ~/.claude/",
-        abs_path.display()
-    );
-    info!("");
+    println!("\n✅ Claude Code environment created successfully!\n");
+    println!("⚠️  WARNING: The install steps below will overwrite files in ~/.claude/");
+    println!("    Back up any existing configuration before proceeding:");
+    println!("    cp ~/.claude/settings.json ~/.claude/settings.json.bak\n");
+    println!("To install on your machine:\n");
+    println!("  1. Copy agent definitions:");
+    println!("     cp -r {}/agents ~/.claude/", abs_path.display());
+    println!();
+    println!("  2. Copy skills:");
+    println!("     cp -r {}/skills ~/.claude/", abs_path.display());
+    println!();
+    println!("  3. Copy settings:");
+    println!("     cp {}/settings.json ~/.claude/", abs_path.display());
+    println!();
 
     if has_statusline {
-        info!("  4. Copy statusline script:");
-        info!("     cp {}/statusline.sh ~/.claude/", abs_path.display());
-        info!("");
-        info!("Or run all at once:");
-        info!(
+        println!("  4. Copy statusline script:");
+        println!("     cp {}/statusline.sh ~/.claude/", abs_path.display());
+        println!();
+        println!("Or run all at once:");
+        println!(
             "  cp -r {}/{{agents,skills}} ~/.claude/ && \\",
             abs_path.display()
         );
-        info!(
-            "  cp {}/{{claude.settings.json,statusline.sh}} ~/.claude/",
+        println!(
+            "  cp {}/{{settings.json,statusline.sh}} ~/.claude/",
             abs_path.display()
         );
     } else {
-        info!("Or run all at once:");
-        info!(
+        println!("Or run all at once:");
+        println!(
             "  cp -r {}/{{agents,skills}} ~/.claude/ && \\",
             abs_path.display()
         );
-        info!(
-            "  cp {}/claude.settings.json ~/.claude/",
-            abs_path.display()
-        );
+        println!("  cp {}/settings.json ~/.claude/", abs_path.display());
     }
-    info!("");
+    println!();
 
     Ok(())
 }

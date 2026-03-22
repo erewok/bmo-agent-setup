@@ -7,4 +7,5 @@ thinking-enabled = true
 enabled = true
 
 [permissions]
-default-mode = "ask"
+# Default permission mode: "acceptEdits", "bypassPermissions", "default", "dontAsk", "plan", "auto"
+default-mode = "default"

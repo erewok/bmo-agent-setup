@@ -36,22 +36,24 @@ enabled = true
 padding = 2
 
 [permissions]
-# Default permission mode: "allow", "ask", or "deny"
-default-mode = "ask"
+# Default permission mode: "acceptEdits", "bypassPermissions", "default", "dontAsk", "plan", "auto"
+default-mode = "default"
 
-# Permission rules (globs)
+# Permission rules (globs) - tool names must start with uppercase
 allow = [
-    "read:*",
+    "Read:*",
+    "Bash(bmo:*)",
+    "Bash(jq:*)",
 ]
 
 ask = [
-    "write:*",
-    "run:*",
+    "Write:*",
+    "Bash:*",
 ]
 
 deny = [
-    "write:/etc/**",
-    "write:/usr/**",
+    "Write:/etc/**",
+    "Write:/usr/**",
 ]
 
 # Additional directories accessible to agent (optional)

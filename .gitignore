@@ -1,4 +1,5 @@
 .bmo
 /target
+.claude/
 claude-code-env/
 my-config.toml

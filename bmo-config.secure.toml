@@ -8,31 +8,32 @@ fast-mode = false
 enabled = true
 
 [permissions]
-default-mode = "ask"
+# Default permission mode: "acceptEdits", "bypassPermissions", "default", "dontAsk", "plan", "auto"
+default-mode = "default"
 
 # Very restrictive - only allow reading
 allow = [
-    "read:src/**",
-    "read:tests/**",
-    "read:docs/**",
+    "Read:src/**",
+    "Read:tests/**",
+    "Read:docs/**",
 ]
 
 # Require approval for all modifications
 ask = [
-    "write:*",
-    "run:*",
+    "Write:*",
+    "Bash:*",
 ]
 
 # Explicitly deny dangerous operations
 deny = [
-    "write:/etc/**",
-    "write:/usr/**",
-    "write:/bin/**",
-    "write:/sbin/**",
-    "write:~/.ssh/**",
-    "write:~/.aws/**",
-    "run:rm *",
-    "run:sudo *",
+    "Write:/etc/**",
+    "Write:/usr/**",
+    "Write:/bin/**",
+    "Write:/sbin/**",
+    "Write:~/.ssh/**",
+    "Write:~/.aws/**",
+    "Bash(rm *)",
+    "Bash(sudo *)",
 ]
 
 [sandbox]
