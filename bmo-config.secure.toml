@@ -13,27 +13,37 @@ default-mode = "default"
 
 # Very restrictive - only allow reading
 allow = [
-    "Read:src/**",
-    "Read:tests/**",
-    "Read:docs/**",
+    "Read(src/**)",
+    "Read(tests/**)",
+    "Read(docs/**)",
+    "Bash(bmo *)",
+    "Bash(jq *)",
 ]
 
 # Require approval for all modifications
 ask = [
-    "Write:*",
-    "Bash:*",
+    "Write",
+    "Bash",
 ]
 
 # Explicitly deny dangerous operations
 deny = [
-    "Write:/etc/**",
-    "Write:/usr/**",
-    "Write:/bin/**",
-    "Write:/sbin/**",
-    "Write:~/.ssh/**",
-    "Write:~/.aws/**",
+    # Write: block all paths outside the project
+    "Write(//**)",
+    "Write(~/.ssh/**)",
+    "Write(~/.aws/**)",
+    "Write(~/.config/**)",
+    # Read: credential files - deny wins over the scoped allow rules above
+    "Read(~/.ssh/**)",
+    "Read(~/.aws/**)",
+    "Read(~/.config/gh/**)",
+    "Read(~/.netrc)",
+    "Read(~/.npmrc)",
+    "Read(~/.docker/config.json)",
+    "Read(~/.kube/config)",
     "Bash(rm *)",
     "Bash(sudo *)",
+    "Bash(bmo truncate *)",
 ]
 
 [sandbox]

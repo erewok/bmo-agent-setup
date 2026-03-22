@@ -166,15 +166,37 @@ For work involving user-facing surfaces that need design before technical planni
 
 Before any planning or execution, establish context.
 
-1. **Initialize BMO and verify setup** — The @project-manager handles full BMO
+1. **Run security preflight** — Spawn @security-preflight and wait for it to complete before
+   doing anything else. This is a blocking step.
+
+   - **PROCEED**: continue normally.
+   - **PROCEED WITH CAUTION**: surface the top findings to the user, then continue.
+   - **RECOMMEND REVIEW**: present findings and ask the user "Continue anyway? (yes/no)".
+     Do not proceed until the user explicitly confirms.
+
+2. **Initialize BMO and verify setup** — The @project-manager handles full BMO
    initialization during planning.
 
-2. **Check existing issues** — Before spawning the PM, verify there isn't already a plan in
+3. **Check existing issues** — Before spawning the PM, verify there isn't already a plan in
    BMO for this work. Run `bmo issue list --json` and check for existing issues.
 
 ---
 
 ## Spawning Templates
+
+### @security-preflight
+
+```
+Use the @security-preflight agent to audit the environment before we begin:
+
+- Scan for credential hotspots on the filesystem
+- Check active environment variables for secrets
+- Review existing permission configuration (bmo-config.toml, .claude/settings.json)
+- Write findings to .claude/security-preflight.md
+
+Return your verdict (PROCEED / PROCEED WITH CAUTION / RECOMMEND REVIEW) and a brief
+summary of the top findings.
+```
 
 ### @staff-engineer (TDD)
 

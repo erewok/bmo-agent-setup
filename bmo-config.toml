@@ -41,19 +41,33 @@ default-mode = "default"
 
 # Permission rules (globs) - tool names must start with uppercase
 allow = [
-    "Read:*",
-    "Bash(bmo:*)",
-    "Bash(jq:*)",
+    "Read(/)", # See Claude docs: this is project-level, not root level!
+    "Bash(bmo *)",
+    "Bash(jq *)",
+    "Edit(./)"
 ]
 
 ask = [
-    "Write:*",
-    "Bash:*",
+
+    "Write",
+    "Bash",
 ]
 
 deny = [
-    "Write:/etc/**",
-    "Write:/usr/**",
+    # Write: block all paths outside the project
+    "Write(//**)",          # all absolute filesystem writes
+    "Write(~/.ssh/**)",     # SSH keys (~-paths are a separate namespace from //)
+    "Write(~/.aws/**)",     # AWS credentials
+    "Write(~/.config/**)",  # gh token, gcloud, op, etc.
+    # Read: same credential paths — sandbox doesn't protect the Read tool
+    "Read(~/.ssh/**)",
+    "Read(~/.aws/**)",
+    "Read(~/.config/gh/**)",    # gh CLI auth token specifically
+    "Read(~/.netrc)",
+    "Read(~/.npmrc)",
+    "Read(~/.docker/config.json)",
+    "Read(~/.kube/config)",
+    "Bash(bmo truncate *)",
 ]
 
 # Additional directories accessible to agent (optional)
@@ -61,16 +75,16 @@ deny = [
 
 [sandbox]
 # Enable sandbox mode
-enabled = false
+enabled = true
 
 # Auto-allow bash if sandboxed
-# auto-allow-bash = true
+auto-allow-bash = true
 
 # Allow unsandboxed commands
-# allow-unsandboxed-commands = false
+allow-unsandboxed-commands = false
 
 # Commands excluded from sandbox (optional)
-# excluded-commands = ["git", "cargo"]
+# excluded-commands = ["cargo", "bmo", "jq"]
 
 [sandbox.network]
 # Allowed network domains

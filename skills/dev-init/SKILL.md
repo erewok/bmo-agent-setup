@@ -19,7 +19,28 @@ never write spec files yourself.
 
 ## Pre-flight
 
-Before spawning any agents, check for existing spec files:
+### Step 0: Security Preflight
+
+Before anything else, spawn @security-preflight and wait for it to complete.
+
+- **PROCEED**: continue to the spec file check below.
+- **PROCEED WITH CAUTION**: surface the top findings to the user, then continue.
+- **RECOMMEND REVIEW**: present findings and ask the user "Continue anyway? (yes/no)".
+  Do not proceed until the user explicitly confirms.
+
+```
+Use the @security-preflight agent to audit the environment before we begin:
+
+- Scan for credential hotspots on the filesystem
+- Check active environment variables for secrets
+- Review existing permission configuration (bmo-config.toml, .claude/settings.json)
+- Write findings to .claude/security-preflight.md
+
+Return your verdict (PROCEED / PROCEED WITH CAUTION / RECOMMEND REVIEW) and a brief
+summary of the top findings.
+```
+
+### Step 1: Check Existing Spec Files
 
 1. Run `ls docs/spec/` to check for existing files.
 2. **If files exist**, ask the user with `AskUserQuestion`:

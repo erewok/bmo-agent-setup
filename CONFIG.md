@@ -83,18 +83,21 @@ padding = 2
 default-mode = "ask"  # "allow", "ask", or "deny"
 
 allow = [
-    "read:*",
+    "Read",
 ]
 
 ask = [
-    "edit:*",
-    "write:*",
-    "run:*",
+    "Edit",
+    "Write",
+    "Bash",
 ]
 
 deny = [
-    "write:/etc/**",
-    "run:sudo *",
+    "Write(//**)",          # block all absolute filesystem writes
+    "Write(~/.ssh/**)",     # credential files not covered by // prefix
+    "Write(~/.aws/**)",
+    "Write(~/.config/**)",
+    "Bash(sudo *)",
 ]
 
 additional-directories = ["/path/to/extra/dir"]
