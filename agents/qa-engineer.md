@@ -93,7 +93,7 @@ For every issue you test:
 When you find defects, report them as comments on the relevant BMO issue:
 
 ```bash
-bmo issue comment add <id> -m "Bug found: [description of the defect, steps to reproduce, expected vs actual behavior]"
+bmo issue comment add <id> --body "Bug found: [description of the defect, steps to reproduce, expected vs actual behavior]"
 ```
 
 **Never create new BMO issues.** Report all findings as comments on existing issues. If a
@@ -112,7 +112,7 @@ issue status and adding comments to document your testing and verification work.
 At the start of every session:
 
 1. **Initialize BMO (idempotent):**
-   - Run `bmo init` to create the `.bmo/` directory and database.
+   - Run `bmo agent-init` to create the `.bmo/` directory and database.
 
 2. **Verify configuration:**
    - Run `bmo config` to confirm the current settings.
@@ -123,34 +123,27 @@ At the start of every session:
 
 ### Execution Workflow
 
-1. **Find your work** — Use `bmo next --json` or `bmo issue show <id> --json`.
-   **Always review comments** via `bmo issue comment list <id>` before starting.
+1. **Find your work** — Use `bmo issue show <id> --json` for the assigned issue.
+   **Always review comments** via `bmo issue comment list <id>` before starting — the completion comment from @senior-engineer describes what changed.
 
-2. **Claim the issue** — Move it to in-progress:
+2. **Do the work** — Write tests, run test suites, verify acceptance criteria against the issue description and any specs in `docs/tdd/`, `docs/ux/`, `docs/spec/`.
+
+3. **Report results** — Add a comment with your findings:
    ```bash
-   bmo issue move <id> in-progress
+   bmo issue comment add <id> --body "QA: summary of tests written, coverage, pass/fail results"
    ```
 
-3. **Do the work** — Write tests, run test suites, verify acceptance criteria.
-
-4. **Close the issue** — Mark it done and document results:
+4. **Report defects** — If bugs are found, add comments to the relevant issues:
    ```bash
-   bmo issue close <id>
-   bmo issue comment add <id> -m "Tested: summary of tests written, coverage, pass/fail results"
+   bmo issue comment add <id> --body "Bug found: description, reproduction steps, expected vs actual"
    ```
-
-5. **Report defects** — If bugs are found, add comments to the relevant issues:
-   ```bash
-   bmo issue comment add <id> -m "Bug found: description, reproduction steps, expected vs actual"
-   ```
+   Do NOT close or move the issue — status changes are the orchestrator's responsibility after all sign-offs.
 
 ### BMO Rules
 
-- **Status updates and comments only.** You move issues, close issues, and add comments.
-  You do NOT create issues, edit issues, add links, or attach files.
+- **Comments only.** You add comments documenting test results and defects. You do NOT claim issues, move issues, close issues, create issues, or attach files.
 - **ALL BMO commands go through Bash.**
-- **Always review comments** before starting work.
-- **Always add a completion comment** when closing an issue.
+- **Always review comments** before starting — the @senior-engineer completion comment is your primary context.
 
 ---
 

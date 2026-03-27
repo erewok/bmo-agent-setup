@@ -37,20 +37,31 @@ file so that Claude Code picks them up automatically.
 
 Future support for GitHub Copilot CLI as an alternative target is planned.
 
-The agent team is configured to use **`bmo`** for issue tracking. `bmo` is an alternative
-to Docket and is the canonical issue tracking CLI for this team configuration.
+The agent team is configured to use **[`bmo`](https://github.com/erewok/bmo)** for issue tracking.
 
 ---
 
 ## Agent Team
 
-| Agent | Role |
-|---|---|
-| **Staff Engineer** | Architecture, technical design documents (TDDs), code review |
-| **Senior Engineer** | Implementation, code quality, debugging |
-| **Project Manager** | Issue planning, task breakdown, dependency management |
-| **QA Engineer** | Testing, verification, acceptance criteria |
-| **UX Designer** | User experience design specs |
+### Staff Engineer (`@staff-engineer`)
+
+Technical architect and code reviewer. Produces Technical Design Documents (TDDs) in `docs/tdd/` for complex work, maintains project specifications in `docs/spec/`, and reviews all `@senior-engineer` implementation changes before they are considered complete. Never writes implementation code — outputs are design documents and review feedback only.
+
+### Project Manager (`@project-manager`)
+
+Plans and decomposes work into BMO issues. Explores the codebase, creates issue hierarchies with dependencies, attaches affected files to issues for collision detection, and runs `bmo plan` to verify the computed execution phase structure. The only agent that creates BMO issues. Never writes code.
+
+### Senior Engineer (`@senior-engineer`)
+
+Implements solutions from pre-planned BMO issues. Claims issues atomically with `bmo issue claim`, implements within the scoped files, then moves issues to `review` status when done. Does **not** close issues (closing requires `@staff-engineer` sign-off) and does **not** commit code unless explicitly instructed after review passes.
+
+### QA Engineer (`@qa-engineer`)
+
+Verifies implementation against acceptance criteria after the review phase. Writes and runs tests, checks for regressions, and reports results and defects as BMO comments. Does not claim or close issues — communicates via comments only.
+
+### UX Designer (`@ux-designer`)
+
+Produces UX design specs in `docs/ux/` for user-facing work: UI, CLI commands, API ergonomics, error messages, config formats, and onboarding flows. Designs interaction flows and acceptance criteria before technical planning begins. Never writes implementation code.
 
 ---
 
@@ -65,12 +76,25 @@ to Docket and is the canonical issue tracking CLI for this team configuration.
 
 ## BMO Integration
 
-The agent team is configured to use the `bmo` CLI for issue tracking. `bmo` provides a
-Kanban-style workflow (`todo`, `in-progress`, `done`) via a simple command-line interface
-and serves as an alternative to Docket.
+The agent team uses the [`bmo`](https://github.com/erewok/bmo) CLI for issue tracking. Each agent references `bmo` commands in its system prompt. When you invoke the `dev-team` skill or any individual agent, they manage work through `bmo`.
 
-Each agent in the team references `bmo` commands in its system prompt. When you invoke
-the `dev-team` skill or any individual agent, they manage work through `bmo`.
+### Issue Lifecycle
+
+Issues flow through a defined lifecycle enforced by the agent roles:
+
+```
+todo → in-progress (senior-engineer claims) → review (senior-engineer when done) → done (orchestrator after staff-engineer sign-off)
+```
+
+### Who Does What in BMO
+
+| Agent | claim | move to review | close | comment |
+|---|---|---|---|---|
+| **senior-engineer** | ✅ only agent that claims | ✅ when done | ❌ | ✅ |
+| **qa-engineer** | ❌ | ❌ | ❌ | ✅ only |
+| **staff-engineer** | ❌ | ❌ | ❌ | ✅ |
+| **project-manager** | ❌ | ❌ | ❌ | ✅ |
+| **orchestrator** (dev-team) | ❌ | ❌ | ✅ after review | ❌ |
 
 ---
 
