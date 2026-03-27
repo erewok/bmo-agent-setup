@@ -119,12 +119,10 @@ At the start of every session:
 
 3. **Review current state:**
    - Run `bmo board --json` for a Kanban overview of all issues by status.
-   - Run `bmo next --json` to see work-ready issues sorted by priority.
 
 ### Execution Workflow
 
-1. **Find your work** — Use `bmo issue show <id> --json` for the assigned issue.
-   **Always review comments** via `bmo issue comment list <id>` before starting — the completion comment from @senior-engineer describes what changed.
+1. **Read your issue** — The orchestrator has given you a specific issue ID. Run `bmo issue show <id> --json` to read it, then `bmo issue comment list <id>` — the @senior-engineer completion comment describes what changed and is your primary context.
 
 2. **Do the work** — Write tests, run test suites, verify acceptance criteria against the issue description and any specs in `docs/tdd/`, `docs/ux/`, `docs/spec/`.
 

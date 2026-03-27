@@ -88,7 +88,7 @@ queries, comments, status changes, and relationship management all use `bmo` com
 - Cannot spawn sub-agents
 
 **@senior-engineer (Implementation):**
-- Claims BMO issues atomically (`bmo issue claim`) and implements solutions
+- Receives a pre-claimed issue and `AGENT_REF` from the orchestrator, implements solutions
 - Checks `docs/tdd/`, `docs/ux/`, and `docs/spec/` for design and project context before implementing
 - Moves issues to `review` status when done — does NOT close issues (closing requires @staff-engineer sign-off)
 - Does NOT create BMO issues — for ad-hoc work, creates a single tracking issue then moves to review
@@ -257,17 +257,18 @@ Requirements:
 Use the @senior-engineer agent to complete this issue:
 
 BMO Issue: {ISSUE-ID} — {title}
+Agent Reference: {AGENT_REF}
 Description: {full issue description from BMO}
+
+The issue is already claimed under your agent reference {AGENT_REF}. Do not claim it again.
 
 Rules:
 - BEFORE starting, run `bmo agent-init` via Bash, then check docs/tdd/, docs/ux/, and docs/spec/ for relevant context
 - BEFORE starting, run `bmo issue comment list {ISSUE-ID}` via Bash to review all comments
-- Claim the issue atomically: `bmo issue claim {ISSUE-ID} --assignee senior-engineer-{ISSUE-ID}` via Bash
-  (if this exits non-zero, the issue is already claimed — stop and report back)
 - Do NOT commit any changes. Code must be reviewed by @staff-engineer before any commit happens.
 - Do NOT modify files outside the scope of this issue: {scoped files}
-- When done, run `bmo issue move {ISSUE-ID} review` and
-  `bmo issue comment add {ISSUE-ID} --body "Completed: summary of changes, files touched, any risks"` via Bash
+- When done, run `bmo issue move {ISSUE-ID} review` and leave a completion comment that includes your agent reference:
+  `bmo issue comment add {ISSUE-ID} --body "Completed [{AGENT_REF}]: summary of changes, files touched, any risks"` via Bash
 - Do NOT close the issue — closing requires @staff-engineer sign-off
 - Report what files you changed and a summary of the work
 - If you discover additional work needed, add a comment via
@@ -316,9 +317,13 @@ Rules:
 ### Implementation Phase
 
 7. **Execute one phase at a time.** Run `bmo plan --phase N` to see exactly which issues are
-   in the current phase. Spawn one @senior-engineer per issue in that phase in parallel.
+   in the current phase. For each issue, before spawning:
+   - Generate a unique agent reference: `AGENT_REF="se-{ISSUE-ID}-$(date +%s)"`
+   - Pre-claim the issue: `bmo issue claim {ISSUE-ID} --assignee "$AGENT_REF"`
+   - Then spawn the @senior-engineer, passing `AGENT_REF` and the issue details
 
    **Spawn all agents for the current phase in the same turn** to maximize parallelism.
+   Generate each `AGENT_REF` and pre-claim each issue before the batch spawn.
 
 8. **Wait for all agents in the phase to complete** before starting the next phase.
 
@@ -337,17 +342,21 @@ Rules:
     bmo issue close <id>
     ```
 
-    **If blockers are found** — reset each blocked issue so it accurately reflects its state,
-    then spawn a new @senior-engineer to address the specific findings:
+    **If blockers are found** — read the AGENT_REF from the SE's completion comment, reset
+    each blocked issue, then spawn a new @senior-engineer with a fresh AGENT_REF:
     ```bash
+    # Read {PRIOR_AGENT_REF} from the SE completion comment first
     bmo issue move <id> todo
     bmo issue edit <id> --assignee ""
-    bmo issue comment add <id> --body "Returned to todo: blockers found in review. See staff-engineer findings above."
+    bmo issue comment add <id> --body "Returned to todo: blockers found in review. Prior work by {PRIOR_AGENT_REF} — see their completion comment and staff-engineer review above."
+    # Generate fresh reference and pre-claim for the new SE
+    NEW_AGENT_REF="se-{ISSUE-ID}-$(date +%s)"
+    bmo issue claim <id> --assignee "$NEW_AGENT_REF"
     ```
-    The new @senior-engineer should be told: "Fix the review blockers on `{ISSUE-ID}`. Run
-    `bmo issue comment list {ISSUE-ID}` first — the specific blockers are in the staff-engineer
-    review comment." After fixes, re-spawn @staff-engineer to re-review. Do not proceed to QA
-    until review passes cleanly.
+    Spawn a new @senior-engineer with `NEW_AGENT_REF` and: "Fix the review blockers on
+    `{ISSUE-ID}`. Run `bmo issue comment list {ISSUE-ID}` first — the specific blockers are
+    in the staff-engineer review comment." After fixes, re-spawn @staff-engineer to re-review.
+    Do not proceed to QA until review passes cleanly.
 
 ### Verification Phase (medium+ tasks)
 
@@ -420,7 +429,7 @@ Retry with corrected scoping.
 **User wants to modify the plan mid-execution:** Pause after the current phase. Re-engage
 @project-manager to revise remaining phases. Resume execution.
 
-**Review finds blockers:** Reset each blocked issue (`bmo issue move <id> todo` + `bmo issue edit <id> --assignee ""`), add a comment linking to the findings, then spawn a new @senior-engineer to fix them. The original subagent may be gone — it doesn't matter which agent does the work. Re-run @staff-engineer review after fixes. Do not proceed to QA until review passes cleanly.
+**Review finds blockers:** Read the `AGENT_REF` from the SE's completion comment. Reset the issue (`bmo issue move <id> todo` + `bmo issue edit <id> --assignee ""`), add a comment preserving the prior `AGENT_REF` for forensics, then generate a fresh `AGENT_REF`, pre-claim, and spawn a new @senior-engineer. The original subagent may be gone — it doesn't matter which agent does the work. Re-run @staff-engineer review after fixes. Do not proceed to QA until review passes cleanly.
 
 ---
 
@@ -451,15 +460,16 @@ bmo issue file conflicts <id> --json  — Check for file overlaps with other in-
 bmo issue create                  — Create issue (-t, -d, -p, -T, -l, --parent)
 bmo issue file add <id> <paths>   — Attach files immediately after creating (PM's responsibility)
 
-# Claiming & working (senior-engineer only)
-bmo issue claim <id> --assignee <name>  — Atomically claim a ticket (exits 4 if already claimed)
-bmo issue move <id> review        — Move to review when implementation is done (NOT close)
-bmo issue comment add <id> --body ""  — Record findings, completion notes, discoveries
+# Orchestrator-only operations
+AGENT_REF="se-{ISSUE-ID}-$(date +%s)"            — Generate unique agent reference before spawning
+bmo issue claim <id> --assignee "$AGENT_REF"      — Pre-claim before spawning SE (exits 4 if already claimed)
+bmo issue close <id>                               — Mark done (only after clean review)
+bmo issue move <id> todo                           — Reset a blocked issue back to the queue
+bmo issue edit <id> --assignee ""                  — Clear assignee (always pair with move todo)
 
-# Orchestrator-only operations (after staff-engineer sign-off or blocker reset)
-bmo issue close <id>              — Mark done (only after clean review)
-bmo issue move <id> todo          — Reset a blocked issue back to the queue
-bmo issue edit <id> --assignee "" — Clear assignee (use after moving back to todo)
+# Senior-engineer operations (pre-planned work)
+bmo issue move <id> review        — Hand off when done (NOT close)
+bmo issue comment add <id> --body "Completed [{AGENT_REF}]: ..."  — Always include AGENT_REF
 
 # Relationships
 bmo issue link add <id> blocks <target>

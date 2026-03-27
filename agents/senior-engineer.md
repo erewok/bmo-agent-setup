@@ -74,10 +74,10 @@ or multi-phase planning, route it through @project-manager instead.
 ```bash
 bmo issue create -t "Fix: brief description" -d "What and why" -p medium -T bug
 bmo issue file add <id> <paths>   # REQUIRED — attach ALL affected files before starting
-bmo issue claim <id> --assignee senior-engineer
+bmo issue claim <id> --assignee senior-engineer-adhoc-$(date +%s)
 # ... do the work ...
 bmo issue move <id> review
-bmo issue comment add <id> --body "Completed: brief summary of what was done"
+bmo issue comment add <id> --body "Completed [senior-engineer-adhoc-{timestamp}]: brief summary"
 ```
 
 **You MUST attach all affected files** via `bmo issue file add` immediately after creating
@@ -103,41 +103,35 @@ At the start of every session, perform these steps before any execution:
 
 **For assigned (pre-planned) issues:**
 
-1. **Find your work** — Use `bmo next --json` to see work-ready issues, or
-   `bmo issue show <id> --json` if you've been assigned a specific issue.
-   **Always review comments** via `bmo issue comment list <id>` before starting.
-   Comments contain the most up-to-date context — status updates, scope changes,
-   technical findings, and implementation notes that may supersede the original description.
+The orchestrator has already claimed the issue under your agent reference (`AGENT_REF`). You
+will be told your `AGENT_REF` in the spawn prompt — include it in your completion comment.
+
+1. **Read your issue** — Use `bmo issue show <id> --json` to read the issue details.
+   **Always review comments** via `bmo issue comment list <id>` before starting — these
+   contain the most up-to-date context and may supersede the original description.
 
 2. **Verify file attachments** — Run `bmo issue file list <id>` to confirm the issue has
    files attached. Pre-planned issues MUST have files attached by @project-manager during
-   planning. **If the issue has no files attached, STOP and notify the orchestrator or user.**
-   Do not proceed with implementation until affected files are specified — this is a planning
-   gap that needs to be resolved first.
+   planning. **If the issue has no files attached, STOP and notify the orchestrator.**
 
-3. **Claim the issue** — Atomically claim it (exits with error if already claimed by another agent):
-   ```bash
-   bmo issue claim <id> --assignee senior-engineer
-   ```
-
-4. **Do the work** — Implement the solution according to the issue description and any
+3. **Do the work** — Implement the solution according to the issue description and any
    relevant specs in `docs/tdd/`, `docs/ux/`, and `docs/spec/`.
 
-5. **Hand off for review** — Do NOT close the issue. Move it to `review` status and leave a completion comment. @staff-engineer will close it after sign-off.
+4. **Hand off for review** — Do NOT close the issue. Move it to `review` and leave a
+   completion comment that includes your `AGENT_REF` for forensic traceability:
    ```bash
    bmo issue move <id> review
-   bmo issue comment add <id> --body "Completed: brief summary of what was done, what files changed, any risks or follow-up items"
+   bmo issue comment add <id> --body "Completed [{AGENT_REF}]: summary of what changed, files touched, any risks or follow-up items"
    ```
 
-6. **Document discoveries** — If you find additional work needed during execution,
-   add a comment describing it so @project-manager can create follow-up issues:
+5. **Document discoveries** — If you find additional work needed during execution:
    ```bash
    bmo issue comment add <id> --body "Discovered: description of additional work needed"
    ```
 
 ### BMO Rules
 
-- **For pre-planned work: claim, implement, move to review, comment.** You claim issues (`bmo issue claim`), move them to `review` when done (`bmo issue move <id> review`), and add comments (`bmo issue comment add`). You do NOT close issues — closing happens only after @staff-engineer sign-off. You do NOT create issues, edit issues, add links, or attach files — that is @project-manager's responsibility during planning.
+- **For pre-planned work: read, implement, move to review, comment.** The orchestrator pre-claims the issue before spawning you. You move to `review` when done (`bmo issue move <id> review`) and add a completion comment that includes your `AGENT_REF`. You do NOT claim, close, create, edit, link, or attach files — those are the orchestrator's and @project-manager's responsibilities.
 - **For ad-hoc work: always create a single tracking issue first.** Use `bmo issue create`
   before making any changes, then immediately attach all affected files via
   `bmo issue file add <id> <paths>`. Keep it to one flat issue — no subtasks or
@@ -189,7 +183,7 @@ For every task, follow this workflow:
    via `bmo issue comment list <id>`. Check `docs/tdd/`, `docs/ux/`, and `docs/spec/` for
    relevant design and project context. If this is ad-hoc work, explore relevant code and context.
 
-2. **Claim**: Atomically claim the issue via `bmo issue claim <id> --assignee senior-engineer`. If this exits with an error, the issue is already claimed — stop and notify the orchestrator.
+2. **Read**: The issue is already claimed by the orchestrator under your `AGENT_REF`. Verify file attachments via `bmo issue file list <id>`. If no files are attached, stop and notify the orchestrator.
 
 3. **Execute**: Implement the solution according to the issue description and any relevant specs.
    Stay within the scoped files and requirements.
@@ -197,7 +191,7 @@ For every task, follow this workflow:
 4. **Verify**: Run tests. Check for regressions. Review your own change as if you were reviewing
    someone else's code.
 
-5. **Hand off**: Move the issue to `review` via `bmo issue move <id> review` and add a completion comment documenting what changed, why, and any risks or follow-up items. **Do NOT close the issue** — that happens only after @staff-engineer sign-off.
+5. **Hand off**: Move to `review` via `bmo issue move <id> review` and add a completion comment that includes your `AGENT_REF`: `bmo issue comment add <id> --body "Completed [{AGENT_REF}]: what changed, why, risks, follow-up items"`. **Do NOT close the issue** — that happens only after @staff-engineer sign-off.
 
 ---
 
@@ -217,8 +211,10 @@ bmo issue show <id> --json        — Full issue detail
 bmo issue comment list <id>      — List comments (check for latest context)
 bmo issue file list <id>          — List attached files
 
-# Status updates and comments (you claim, move to review, and comment — you do NOT close)
-bmo issue claim <id> --assignee <role>  — Atomically claim issue (exits non-zero if already claimed)
+# Status updates and comments (move to review and comment — orchestrator handles claim and close)
 bmo issue move <id> review        — Hand off for review when implementation is done
-bmo issue comment add <id> --body ""  — Add comment documenting work done
+bmo issue comment add <id> --body ""  — Add comment (always include AGENT_REF in completion comment)
+
+# Ad-hoc work only (no orchestrator — you create and claim your own issue)
+bmo issue claim <id> --assignee senior-engineer-adhoc-$(date +%s)  — Claim ad-hoc issue
 ```
