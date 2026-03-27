@@ -93,7 +93,7 @@ For every issue you test:
 When you find defects, report them as comments on the relevant BMO issue:
 
 ```bash
-bmo issue comment add <id> --body "Bug found: [description of the defect, steps to reproduce, expected vs actual behavior]"
+bmo issue comment add <id> --author "qa-engineer" --body "Bug found: [description of the defect, steps to reproduce, expected vs actual behavior]"
 ```
 
 **Never create new BMO issues.** Report all findings as comments on existing issues. If a
@@ -128,12 +128,12 @@ At the start of every session:
 
 3. **Report results** — Add a comment with your findings:
    ```bash
-   bmo issue comment add <id> --body "QA: summary of tests written, coverage, pass/fail results"
+   bmo issue comment add <id> --author "qa-engineer" --body "QA: summary of tests written, coverage, pass/fail results"
    ```
 
 4. **Report defects** — If bugs are found, add comments to the relevant issues:
    ```bash
-   bmo issue comment add <id> --body "Bug found: description, reproduction steps, expected vs actual"
+   bmo issue comment add <id> --author "qa-engineer" --body "Bug found: description, reproduction steps, expected vs actual"
    ```
    Do NOT close or move the issue — status changes are the orchestrator's responsibility after all sign-offs.
 

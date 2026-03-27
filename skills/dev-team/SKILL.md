@@ -268,11 +268,11 @@ Rules:
 - Do NOT commit any changes. Code must be reviewed by @staff-engineer before any commit happens.
 - Do NOT modify files outside the scope of this issue: {scoped files}
 - When done, run `bmo issue move {ISSUE-ID} review` and leave a completion comment that includes your agent reference:
-  `bmo issue comment add {ISSUE-ID} --body "Completed [{AGENT_REF}]: summary of changes, files touched, any risks"` via Bash
+  `bmo issue comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Completed: summary of changes, files touched, any risks"` via Bash
 - Do NOT close the issue — closing requires @staff-engineer sign-off
 - Report what files you changed and a summary of the work
 - If you discover additional work needed, add a comment via
-  `bmo issue comment add {ISSUE-ID} --body "Discovered: description"` — do NOT do extra work
+  `bmo issue comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Discovered: description"` — do NOT do extra work
 - Remember: ALL BMO commands are Bash commands run via the Bash tool
 ```
 
@@ -290,7 +290,7 @@ Rules:
 - Do NOT claim or close the issue — QA communicates via comments only
 - Write tests that verify acceptance criteria from the issue description and specs
 - Run existing test suites to check for regressions
-- When done, add a comment: `bmo issue comment add {ISSUE-ID} --body "QA: summary of tests, coverage, pass/fail results"` via Bash
+- When done, add a comment: `bmo issue comment add {ISSUE-ID} --author "qa-engineer" --body "QA: summary of tests, coverage, pass/fail results"` via Bash
 - Report bugs as comments on the relevant issue, NOT as new issues
 - Remember: ALL BMO commands are Bash commands run via the Bash tool
 ```
@@ -337,8 +337,9 @@ Rules:
 
 10. **Spawn @staff-engineer to review** all implementation changes.
 
-    **If review passes** — close each reviewed issue:
+    **If review passes** — clear the assignee and close each reviewed issue:
     ```bash
+    bmo issue edit <id> --assignee ""
     bmo issue close <id>
     ```
 
@@ -348,7 +349,7 @@ Rules:
     # Read {PRIOR_AGENT_REF} from the SE completion comment first
     bmo issue move <id> todo
     bmo issue edit <id> --assignee ""
-    bmo issue comment add <id> --body "Returned to todo: blockers found in review. Prior work by {PRIOR_AGENT_REF} — see their completion comment and staff-engineer review above."
+    bmo issue comment add <id> --author "orchestrator" --body "Returned to todo: blockers found in review. Prior work by {PRIOR_AGENT_REF} — see their completion comment and staff-engineer review above."
     # Generate fresh reference and pre-claim for the new SE
     NEW_AGENT_REF="se-{ISSUE-ID}-$(date +%s)"
     bmo issue claim <id> --assignee "$NEW_AGENT_REF"
@@ -463,13 +464,13 @@ bmo issue file add <id> <paths>   — Attach files immediately after creating (P
 # Orchestrator-only operations
 AGENT_REF="se-{ISSUE-ID}-$(date +%s)"            — Generate unique agent reference before spawning
 bmo issue claim <id> --assignee "$AGENT_REF"      — Pre-claim before spawning SE (exits 4 if already claimed)
-bmo issue close <id>                               — Mark done (only after clean review)
+bmo issue edit <id> --assignee ""                  — Clear assignee (always pair with close OR move todo)
+bmo issue close <id>                               — Mark done (always clear assignee first)
 bmo issue move <id> todo                           — Reset a blocked issue back to the queue
-bmo issue edit <id> --assignee ""                  — Clear assignee (always pair with move todo)
 
 # Senior-engineer operations (pre-planned work)
 bmo issue move <id> review        — Hand off when done (NOT close)
-bmo issue comment add <id> --body "Completed [{AGENT_REF}]: ..."  — Always include AGENT_REF
+bmo issue comment add <id> --author "{AGENT_REF}" --body "Completed: ..."  — AGENT_REF goes in --author
 
 # Relationships
 bmo issue link add <id> blocks <target>

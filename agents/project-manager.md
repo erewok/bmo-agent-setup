@@ -375,7 +375,7 @@ bmo issue create                  — Create issue (-t, -d, -p, -T, -l, --parent
 bmo issue edit <id>               — Edit issue (-t, -d, -s, -p, -T)
 bmo issue file add <id> <paths>   — Attach files immediately after creating each issue
 bmo issue file list <id>          — List attached files
-bmo issue comment add <id> --body ""  — Add comment
+bmo issue comment add <id> --author "project-manager" --body ""  — Add comment
 
 # Relationships
 bmo issue link add <id> blocks <target>

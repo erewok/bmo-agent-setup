@@ -74,10 +74,11 @@ or multi-phase planning, route it through @project-manager instead.
 ```bash
 bmo issue create -t "Fix: brief description" -d "What and why" -p medium -T bug
 bmo issue file add <id> <paths>   # REQUIRED — attach ALL affected files before starting
-bmo issue claim <id> --assignee senior-engineer-adhoc-$(date +%s)
+AGENT_REF="senior-engineer-adhoc-$(date +%s)"
+bmo issue claim <id> --assignee "$AGENT_REF"
 # ... do the work ...
 bmo issue move <id> review
-bmo issue comment add <id> --body "Completed [senior-engineer-adhoc-{timestamp}]: brief summary"
+bmo issue comment add <id> --author "$AGENT_REF" --body "Completed: brief summary of what was done"
 ```
 
 **You MUST attach all affected files** via `bmo issue file add` immediately after creating
@@ -121,12 +122,12 @@ will be told your `AGENT_REF` in the spawn prompt — include it in your complet
    completion comment that includes your `AGENT_REF` for forensic traceability:
    ```bash
    bmo issue move <id> review
-   bmo issue comment add <id> --body "Completed [{AGENT_REF}]: summary of what changed, files touched, any risks or follow-up items"
+   bmo issue comment add <id> --author "{AGENT_REF}" --body "Completed: summary of what changed, files touched, any risks or follow-up items"
    ```
 
 5. **Document discoveries** — If you find additional work needed during execution:
    ```bash
-   bmo issue comment add <id> --body "Discovered: description of additional work needed"
+   bmo issue comment add <id> --author "{AGENT_REF}" --body "Discovered: description of additional work needed"
    ```
 
 ### BMO Rules
@@ -191,7 +192,7 @@ For every task, follow this workflow:
 4. **Verify**: Run tests. Check for regressions. Review your own change as if you were reviewing
    someone else's code.
 
-5. **Hand off**: Move to `review` via `bmo issue move <id> review` and add a completion comment that includes your `AGENT_REF`: `bmo issue comment add <id> --body "Completed [{AGENT_REF}]: what changed, why, risks, follow-up items"`. **Do NOT close the issue** — that happens only after @staff-engineer sign-off.
+5. **Hand off**: Move to `review` via `bmo issue move <id> review` and add a completion comment: `bmo issue comment add <id> --author "{AGENT_REF}" --body "Completed: what changed, why, risks, follow-up items"`. **Do NOT close the issue** — that happens only after @staff-engineer sign-off.
 
 ---
 
@@ -213,7 +214,7 @@ bmo issue file list <id>          — List attached files
 
 # Status updates and comments (move to review and comment — orchestrator handles claim and close)
 bmo issue move <id> review        — Hand off for review when implementation is done
-bmo issue comment add <id> --body ""  — Add comment (always include AGENT_REF in completion comment)
+bmo issue comment add <id> --author "{AGENT_REF}" --body ""  — AGENT_REF goes in --author, not the body
 
 # Ad-hoc work only (no orchestrator — you create and claim your own issue)
 bmo issue claim <id> --assignee senior-engineer-adhoc-$(date +%s)  — Claim ad-hoc issue
