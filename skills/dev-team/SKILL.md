@@ -29,7 +29,7 @@ You do not write code yourself. You do not plan issues yourself. You coordinate.
 ┌──────────────────────────────────────────────────────────────────────┐
 │                          TEAM LEAD (you)                             │
 │               Orchestrator — coordinates everything                  │
-└──┬──────────┬──────────────┬──────────────┬──────────────┬──────────┘
+└──┬──────────┬──────────────┬──────────────┬──────────────┬───────────┘
    │          │              │              │              │
    ▼          ▼              ▼              ▼              ▼
 ┌────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐
@@ -37,7 +37,7 @@ You do not write code yourself. You do not plan issues yourself. You coordinate.
 │ engr   │ │ manager    │ │ designer   │ │ engineer   │ │ engineer   │
 │        │ │            │ │            │ │            │ │            │
 │ TDDs + │ │ Plans work │ │ UX design  │ │ Implements │ │ Tests +    │
-│ Code   │ │ in BMO  │ │ specs in   │ │ code from  │ │ verifies   │
+│ Code   │ │ in BMO     │ │ specs in   │ │ code from  │ │ verifies   │
 │ Review │ │            │ │ docs/      │ │ issues     │ │ acceptance │
 │        │ │ ONLY role  │ │ ux/        │ │            │ │ criteria   │
 │ docs/  │ │ that       │ │            │ │            │ │            │
@@ -267,7 +267,7 @@ Rules:
 - BEFORE starting, run `bmo issue comment list {ISSUE-ID}` via Bash to review all comments
 - Do NOT commit any changes. Code must be reviewed by @staff-engineer before any commit happens.
 - Do NOT modify files outside the scope of this issue: {scoped files}
-- When done, run `bmo issue move {ISSUE-ID} review` and leave a completion comment that includes your agent reference:
+- When done, run `bmo issue move {ISSUE-ID} --status review` and leave a completion comment that includes your agent reference:
   `bmo issue comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Completed: summary of changes, files touched, any risks"` via Bash
 - Do NOT close the issue — closing requires @staff-engineer sign-off
 - Report what files you changed and a summary of the work
@@ -347,7 +347,7 @@ Rules:
     each blocked issue, then spawn a new @senior-engineer with a fresh AGENT_REF:
     ```bash
     # Read {PRIOR_AGENT_REF} from the SE completion comment first
-    bmo issue move <id> todo
+    bmo issue move <id> -s todo
     bmo issue edit <id> --assignee ""
     bmo issue comment add <id> --author "orchestrator" --body "Returned to todo: blockers found in review. Prior work by {PRIOR_AGENT_REF} — see their completion comment and staff-engineer review above."
     # Generate fresh reference and pre-claim for the new SE
@@ -430,13 +430,13 @@ Retry with corrected scoping.
 **User wants to modify the plan mid-execution:** Pause after the current phase. Re-engage
 @project-manager to revise remaining phases. Resume execution.
 
-**Review finds blockers:** Read the `AGENT_REF` from the SE's completion comment. Reset the issue (`bmo issue move <id> todo` + `bmo issue edit <id> --assignee ""`), add a comment preserving the prior `AGENT_REF` for forensics, then generate a fresh `AGENT_REF`, pre-claim, and spawn a new @senior-engineer. The original subagent may be gone — it doesn't matter which agent does the work. Re-run @staff-engineer review after fixes. Do not proceed to QA until review passes cleanly.
+**Review finds blockers:** Read the `AGENT_REF` from the SE's completion comment. Reset the issue (`bmo issue move <id> -s todo` + `bmo issue edit <id> --assignee ""`), add a comment preserving the prior `AGENT_REF` for forensics, then generate a fresh `AGENT_REF`, pre-claim, and spawn a new @senior-engineer. The original subagent may be gone — it doesn't matter which agent does the work. Re-run @staff-engineer review after fixes. Do not proceed to QA until review passes cleanly.
 
 ---
 
 ## BMO CLI Quick Reference
 
-All agents run these as **Bash commands** via the Bash tool.
+All agents run these as **Bash commands** via the Bash tool. Add `--json` for structured output when needed. Use `jq` or `python` to parse JSON output for decision-making.
 
 ```
 # Session setup
@@ -464,12 +464,12 @@ bmo issue file add <id> <paths>   — Attach files immediately after creating (P
 # Orchestrator-only operations
 AGENT_REF="se-{ISSUE-ID}-$(date +%s)"            — Generate unique agent reference before spawning
 bmo issue claim <id> --assignee "$AGENT_REF"      — Pre-claim before spawning SE (exits 4 if already claimed)
-bmo issue edit <id> --assignee ""                  — Clear assignee (always pair with close OR move todo)
+bmo issue edit <id> --assignee ""                  — Clear assignee (always pair with close OR move -s todo)
 bmo issue close <id>                               — Mark done (always clear assignee first)
-bmo issue move <id> todo                           — Reset a blocked issue back to the queue
+bmo issue move <id> -s todo                           — Reset a blocked issue back to the queue
 
 # Senior-engineer operations (pre-planned work)
-bmo issue move <id> review        — Hand off when done (NOT close)
+bmo issue move <id> -s review        — Hand off when done (NOT close)
 bmo issue comment add <id> --author "{AGENT_REF}" --body "Completed: ..."  — AGENT_REF goes in --author
 
 # Relationships
