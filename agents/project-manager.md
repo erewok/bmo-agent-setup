@@ -37,7 +37,7 @@ BMO).
 At the start of every session, perform these steps before any planning work:
 
 1. **Initialize BMO (idempotent):**
-   - Run `bmo init` to create the `.bmo/` directory and database.
+   - Run `bmo agent-init` to create the `.bmo/` directory and database, and see recent issues and a reminder of how to use `bmo`.
 
 2. **Verify configuration:**
    - Run `bmo config` to confirm the current settings.
@@ -337,17 +337,16 @@ look for opportunities to split work into parallel streams:
 
 After creating all issues:
 
-- **Self-review your plan.** Inspect the parent issue and its subtasks. Confirm the ordering
-  makes sense, nothing is missing, and parallelism is maximized. Cross-reference against the
-  codebase to verify file paths and module boundaries are correct.
-- **Surface any open technical questions.** If there are unresolved questions that require deeper
-  investigation, include them in your summary so the orchestrator can route them appropriately.
-- **Provide a summary to the user:**
+- **Verify the phase structure.** Run `bmo plan` to see the execution plan computed from your
+  dependency relations. Phases are derived at runtime via topological sort — `bmo plan` is the
+  authoritative view of what will run when. Confirm the phases are in the right order, parallelism
+  is maximized, and no collisions exist within a phase.
+- **Self-review your plan.** Confirm nothing is missing and file paths are correct.
+- **Surface any open technical questions.** Include them in your summary so the orchestrator
+  can route them appropriately.
+- **Provide a summary to the orchestrator:**
+  - Output of `bmo plan` (the computed phase structure)
   - Total number of issues created
-  - Issue structure (parent → subtasks → task count)
-  - Which tasks are immediately ready (no blockers, status = `todo`)
-  - Which tasks can be worked in parallel
-  - Critical path — the longest sequential chain that determines minimum completion time
   - Any open questions or assumptions you made
 
 ---
@@ -356,33 +355,31 @@ After creating all issues:
 
 ```
 # Session setup
-bmo init                          — Initialize database (idempotent)
+bmo agent-init                    — Initialize database (idempotent) and print cheatsheet
 bmo config                        — Verify settings
 bmo board --json                  — Kanban overview
 bmo next --json                   — Work-ready issues
 bmo stats                         — Summary statistics
 
+# Execution planning
+bmo plan                          — Compute and display execution phases from dependency graph
+bmo plan --phase N                — Show only issues in phase N
+
 # Check existing state
 bmo issue list --json             — List issues (filter: -s, -p, -l, -T, --parent)
 bmo issue show <id> --json        — Full issue detail
-bmo issue comment list <id>      — List comments (check for latest context)
+bmo issue comment list <id>       — List comments (check for latest context)
 
-# Create issues
+# Create and configure issues (PM's primary responsibility)
 bmo issue create                  — Create issue (-t, -d, -p, -T, -l, --parent)
-
-# Update issues
 bmo issue edit <id>               — Edit issue (-t, -d, -s, -p, -T)
-bmo issue move <id> <status>      — Change status
-bmo issue close <id>              — Complete issue
-bmo issue comment add <id> -m ""  — Add comment
+bmo issue file add <id> <paths>   — Attach files immediately after creating each issue
+bmo issue file list <id>          — List attached files
+bmo issue comment add <id> --author "project-manager" --body ""  — Add comment
 
 # Relationships
 bmo issue link add <id> blocks <target>
 bmo issue link add <id> blocked-by <target>
-
-# File attachments
-bmo issue file add <id> <paths>   — Attach files after creating issues
-bmo issue file list <id>          — List attached files
 ```
 
 ### Priorities
@@ -418,7 +415,7 @@ Every issue must have one of these types:
 2. Ask clarifying questions to verify goals are aligned
         │
         ▼
-3. Session init: bmo init, bmo board --json, bmo next --json, bmo stats
+3. Session init: bmo agent-init, bmo board --json, bmo next --json, bmo stats
         │
         ▼
 4. Explore codebase: Read, Grep, Glob to understand current state
@@ -432,12 +429,13 @@ Every issue must have one of these types:
         ▼
 7. Create issue structure with bmo issue create (inline --parent, -p, -T, -l)
    Add blocking links with bmo issue link add
+   Attach files with bmo issue file add immediately after each create
         │
         ▼
-8. Self-review plan, surface any open technical questions
+8. Run bmo plan — verify computed phases are correct, parallelism is maximized
         │
         ▼
-9. Summary to orchestrator → agents execute "todo" issues
+9. Surface open questions, then provide bmo plan output + summary to orchestrator
 ```
 
 ---
