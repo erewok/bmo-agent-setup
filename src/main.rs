@@ -99,13 +99,13 @@ fn copy_agents(agents_dir: &Path) -> Result<()> {
 fn copy_skills(skills_dir: &Path) -> Result<()> {
     let source_skills = Path::new("skills");
 
-    // Copy dev-init
-    if source_skills.join("dev-init").exists() {
+    // Copy documentation-driver
+    if source_skills.join("documentation-driver").exists() {
         copy_dir_recursive(
-            &source_skills.join("dev-init"),
-            &skills_dir.join("dev-init"),
+            &source_skills.join("documentation-driver"),
+            &skills_dir.join("documentation-driver"),
         )?;
-        debug!("  ✓ dev-init/");
+        debug!("  ✓ documentation-driver/");
     }
 
     // Copy dev-team

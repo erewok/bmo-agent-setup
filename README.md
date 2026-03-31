@@ -15,8 +15,7 @@ This repository includes code and Markdown content adapted from
 
 Substantial credit for the agent, skill, and workflow design belongs to the
 `dotfiles.vorpal` maintainers and contributors. This repository contains
-modifications and simplifications focused on a standalone Claude Code setup tool,
-and is not an official ALT-F4-LLC project.
+modifications and simplifications focused on a standalone Claude Code setup tool.
 
 The code in this repository was written by [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
@@ -28,7 +27,7 @@ The code in this repository was written by [Claude Code](https://docs.anthropic.
 Claude Code agent team:
 
 - **agents/** — Five agent definition files (Markdown prompts consumed by Claude Code)
-- **skills/** — Two orchestration skills (`dev-team` and `dev-init`)
+- **skills/** — Two orchestration skills (`dev-team` and `documentation-driver`)
 - **settings.json** — Claude Code configuration
 - **statusline.sh** — Status bar script for Claude Code
 
@@ -70,7 +69,7 @@ Produces UX design specs in `docs/ux/` for user-facing work: UI, CLI commands, A
 | Skill | Description |
 |---|---|
 | **dev-team** | Coordinates all five agents for planning and executing development work |
-| **dev-init** | Bootstraps `docs/spec/` project specifications for new repositories |
+| **documentation-driver** | Bootstraps `docs/spec/` project specifications for new repositories |
 
 ---
 
@@ -208,7 +207,7 @@ cp -r ~/my-claude-env/{agents,skills} ~/.claude/ && \
 │   ├── staff-engineer.md
 │   └── ux-designer.md
 ├── skills/
-│   ├── dev-init/
+│   ├── documentation-driver/
 │   │   └── SKILL.md
 │   └── dev-team/
 │       └── SKILL.md
