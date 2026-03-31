@@ -1,12 +1,12 @@
 ---
 name: documentation-driver
 description: >
-  Bootstrap the project specification files in docs/spec/ by spawning 7 @staff-engineer agents in parallel. Use this skill when the user wants to initialize, generate, or bootstrap project specs — including phrases like "dev init", "initialize specs", "generate specs", "create project specifications", "bootstrap docs/spec", "populate specs", or "set up project documentation".
+  Bootstrap the project specification files in docs/spec/ by spawning 5 @staff-engineer agents in parallel. Use this skill when the user wants to initialize, generate, or bootstrap project specs — including phrases like "document the project", "initialize specs", "generate specs", "create project specifications", "bootstrap docs/spec", "populate specs", or "set up project documentation".
 ---
 
 # Documentation Driver
 
-You are the **Spec Initializer** — an orchestrator that spawns 7 `@staff-engineer` agents in parallel to populate `docs/spec/` with the Seven Spec Files. You coordinate and verify, but you never write spec files yourself.
+You are the **Spec Initializer** — an orchestrator that spawns 5 `@staff-engineer` agents in parallel to populate `docs/spec/` with the Five Spec Files. You coordinate and verify, but you never write spec files yourself.
 
 > **CRITICAL: Do NOT commit ANY changes (no `git add`, no `git commit`, no `git push`) unless EXPLICITLY instructed to do so by the user. This applies to ALL agents spawned by this skill.**
 
@@ -23,8 +23,7 @@ Before spawning any agents, check for existing spec files:
    - **Cancel** — abort the operation
 3. **If no files exist**, proceed directly to execution.
 
-If the user chooses "Overwrite all", delete existing spec files before spawning agents.
-If the user chooses "Skip existing", note which files already exist and only spawn agents for the missing ones.
+If the user chooses "Overwrite all", delete existing spec files before spawning agents. If the user chooses "Skip existing", note which files already exist and only spawn agents for the missing ones.
 
 ---
 
@@ -36,18 +35,16 @@ Use `TeamCreate` with name `documentation-driver` to set up the coordination tea
 
 ### Step 2: Create Tasks
 
-Use `TaskCreate` to create one task per spec file (7 total, or fewer if skipping existing). No dependencies between tasks — all are independent.
+Use `TaskCreate` to create one task per spec file (5 total, or fewer if skipping existing). No dependencies between tasks — all are independent.
 
 Tasks:
 
 | Task Subject | Spec File |
 |---|---|
 | Generate architecture spec | `docs/spec/architecture.md` |
+| Generate external-contracts spec | `docs/spec/external-contracts.md` |
 | Generate security spec | `docs/spec/security.md` |
-| Generate operations spec | `docs/spec/operations.md` |
-| Generate performance spec | `docs/spec/performance.md` |
 | Generate code-quality spec | `docs/spec/code-quality.md` |
-| Generate review-strategy spec | `docs/spec/review-strategy.md` |
 | Generate testing spec | `docs/spec/testing.md` |
 
 ### Step 3: Spawn Agents
@@ -111,6 +108,26 @@ Requirements:
 - Do NOT commit any changes
 ```
 
+### external-contracts.md
+
+```md
+Use the @staff-engineer agent to generate a project specification:
+Generate the `docs/spec/external-contracts.md` project specification file.
+Requirements:
+- Explore the codebase thoroughly using Read, Grep, Glob, and Bash
+- Identify all external interfaces, APIs, data contracts, and integration points
+- Look for API client code, HTTP request patterns, serialization formats, and schema definitions
+- Check for third-party services, message queues, and any form of external communication.
+- Also look for event handlers, message queues, and any form of inter-service communication: both outbound and incoming.
+- Check for config files, environment variables, and documentation that specify external dependencies.
+- Document what ACTUALLY exists in the codebase — not aspirational goals
+- Be honest about gaps and missing pieces
+- Save the completed spec to `docs/spec/external-contracts.md`
+- Create the docs/spec/ directory if it doesn't exist
+- Do NOT write implementation code — the spec file is the deliverable
+- Do NOT commit any changes
+```
+
 ### security.md
 
 ```md
@@ -131,46 +148,6 @@ Requirements:
 - Do NOT commit any changes
 ```
 
-### operations.md
-
-```md
-Use the @staff-engineer agent to generate a project specification:
-
-Generate the `docs/spec/operations.md` project specification file.
-
-Requirements:
-- Explore the codebase thoroughly using Read, Grep, Glob, and Bash
-- Check .github/ for CI/CD workflows, Dockerfiles, deployment configs, and infrastructure code
-- Look for monitoring, logging, observability setup, and operational runbooks
-- Identify rollback procedures, release processes, and environment management
-- Document what ACTUALLY exists in the codebase — not aspirational goals
-- Be honest about gaps and missing pieces
-- Save the completed spec to `docs/spec/operations.md`
-- Create the docs/spec/ directory if it doesn't exist
-- Do NOT write implementation code — the spec file is the deliverable
-- Do NOT commit any changes
-```
-
-### performance.md
-
-```md
-Use the @staff-engineer agent to generate a project specification:
-
-Generate the `docs/spec/performance.md` project specification file.
-
-Requirements:
-- Explore the codebase thoroughly using Read, Grep, Glob, and Bash
-- Look for caching strategies, database queries, connection pooling, and concurrency patterns
-- Identify known bottlenecks, benchmarking tools, and performance-critical paths
-- Check for lazy loading, pagination, batching, and scaling considerations
-- Document what ACTUALLY exists in the codebase — not aspirational goals
-- Be honest about gaps and missing pieces
-- Save the completed spec to `docs/spec/performance.md`
-- Create the docs/spec/ directory if it doesn't exist
-- Do NOT write implementation code — the spec file is the deliverable
-- Do NOT commit any changes
-```
-
 ### code-quality.md
 
 ```md
@@ -186,26 +163,6 @@ Requirements:
 - Document what ACTUALLY exists in the codebase — not aspirational goals
 - Be honest about gaps and missing pieces
 - Save the completed spec to `docs/spec/code-quality.md`
-- Create the docs/spec/ directory if it doesn't exist
-- Do NOT write implementation code — the spec file is the deliverable
-- Do NOT commit any changes
-```
-
-### review-strategy.md
-
-```md
-Use the @staff-engineer agent to generate a project specification:
-
-Generate the `docs/spec/review-strategy.md` project specification file.
-
-Requirements:
-- Explore the codebase thoroughly using Read, Grep, Glob, and Bash
-- Identify areas of high risk, complex logic, and frequent change
-- Determine which review dimensions matter most for this specific project
-- Look for existing PR templates, review checklists, and contribution guidelines
-- Document what ACTUALLY exists in the codebase — not aspirational goals
-- Be honest about gaps and missing pieces
-- Save the completed spec to `docs/spec/review-strategy.md`
 - Create the docs/spec/ directory if it doesn't exist
 - Do NOT write implementation code — the spec file is the deliverable
 - Do NOT commit any changes
@@ -239,6 +196,6 @@ Requirements:
 2. **Never write spec files yourself.** You are the orchestrator, not the author.
 3. **Never commit.** No `git add`, no `git commit`, no `git push`.
 4. **No BMO.** This skill does not use BMO for issue tracking.
-5. **No cross-agent dependencies.** All 7 specs are independent — no task blocks another.
+5. **No cross-agent dependencies.** All 5 specs are independent — no task blocks another.
 6. **Respect the user's choice on existing files.** Honor overwrite/skip/cancel decisions.
 7. **Fail loud.** If an agent fails, report it immediately with details.
