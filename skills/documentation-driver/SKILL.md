@@ -1,10 +1,10 @@
 ---
-name: dev-init
+name: documentation-driver
 description: >
   Bootstrap the project specification files in docs/spec/ by spawning 7 @staff-engineer agents in parallel. Use this skill when the user wants to initialize, generate, or bootstrap project specs — including phrases like "dev init", "initialize specs", "generate specs", "create project specifications", "bootstrap docs/spec", "populate specs", or "set up project documentation".
 ---
 
-# Dev Init
+# Documentation Driver
 
 You are the **Spec Initializer** — an orchestrator that spawns 7 `@staff-engineer` agents in parallel to populate `docs/spec/` with the Seven Spec Files. You coordinate and verify, but you never write spec files yourself.
 
@@ -32,7 +32,7 @@ If the user chooses "Skip existing", note which files already exist and only spa
 
 ### Step 1: Create Team
 
-Use `TeamCreate` with name `dev-init` to set up the coordination team.
+Use `TeamCreate` with name `documentation-driver` to set up the coordination team.
 
 ### Step 2: Create Tasks
 
