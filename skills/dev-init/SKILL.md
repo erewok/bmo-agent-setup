@@ -1,19 +1,14 @@
 ---
 name: dev-init
 description: >
-  Bootstrap the project specification files in docs/spec/ by spawning 7 @staff-engineer agents in
-  parallel. Use this skill when the user wants to initialize, generate, or bootstrap project specs —
-  including phrases like "dev init", "initialize specs", "generate specs", "create project
-  specifications", "bootstrap docs/spec", "populate specs", or "set up project documentation".
+  Bootstrap the project specification files in docs/spec/ by spawning 7 @staff-engineer agents in parallel. Use this skill when the user wants to initialize, generate, or bootstrap project specs — including phrases like "dev init", "initialize specs", "generate specs", "create project specifications", "bootstrap docs/spec", "populate specs", or "set up project documentation".
 ---
-
-> **CRITICAL: Do NOT commit ANY changes (no `git add`, no `git commit`, no `git push`) unless EXPLICITLY instructed to do so by the user. This applies to ALL agents spawned by this skill.**
 
 # Dev Init
 
-You are the **Spec Initializer** — an orchestrator that spawns 7 `@staff-engineer` agents in
-parallel to populate `docs/spec/` with the Seven Spec Files. You coordinate and verify, but you
-never write spec files yourself.
+You are the **Spec Initializer** — an orchestrator that spawns 7 `@staff-engineer` agents in parallel to populate `docs/spec/` with the Seven Spec Files. You coordinate and verify, but you never write spec files yourself.
+
+> **CRITICAL: Do NOT commit ANY changes (no `git add`, no `git commit`, no `git push`) unless EXPLICITLY instructed to do so by the user. This applies to ALL agents spawned by this skill.**
 
 ---
 
@@ -29,8 +24,7 @@ Before spawning any agents, check for existing spec files:
 3. **If no files exist**, proceed directly to execution.
 
 If the user chooses "Overwrite all", delete existing spec files before spawning agents.
-If the user chooses "Skip existing", note which files already exist and only spawn agents for the
-missing ones.
+If the user chooses "Skip existing", note which files already exist and only spawn agents for the missing ones.
 
 ---
 
@@ -42,8 +36,7 @@ Use `TeamCreate` with name `dev-init` to set up the coordination team.
 
 ### Step 2: Create Tasks
 
-Use `TaskCreate` to create one task per spec file (7 total, or fewer if skipping existing). No
-dependencies between tasks — all are independent.
+Use `TaskCreate` to create one task per spec file (7 total, or fewer if skipping existing). No dependencies between tasks — all are independent.
 
 Tasks:
 
@@ -59,16 +52,13 @@ Tasks:
 
 ### Step 3: Spawn Agents
 
-**Spawn all agents in the SAME turn** using parallel `Task` tool calls. This is the entire point of
-the skill — maximum parallelism. Each agent is a `@staff-engineer` (`subagent_type: "staff-engineer"`).
+**Spawn all agents in the SAME turn** using parallel `Task` tool calls. This is the entire point of the skill — maximum parallelism. Each agent is a `@staff-engineer` (`subagent_type: "staff-engineer"`).
 
-Assign each agent its corresponding task via `TaskUpdate` (set `owner` to the agent name) and mark
-tasks `in_progress` before spawning.
+Assign each agent its corresponding task via `TaskUpdate` (set `owner` to the agent name) and mark tasks `in_progress` before spawning.
 
 ### Step 4: Wait for Completion
 
-Poll `TaskList` until all tasks show `completed`. If any agent fails, report the failure immediately
-— do not retry automatically.
+Poll `TaskList` until all tasks show `completed`. If any agent fails, report the failure immediately — do not retry automatically.
 
 ### Step 5: Verify
 
@@ -83,10 +73,9 @@ Use `TeamDelete` to remove the team. Summarize results to the user.
 
 ## Spawning Templates
 
-Each agent gets a focused prompt tailored to its specific engineering dimension. All prompts follow
-this base pattern:
+Each agent gets a focused prompt tailored to its specific engineering dimension. All prompts follow this base pattern:
 
-```
+```md
 Use the @staff-engineer agent to generate a project specification:
 
 Generate the `docs/spec/{filename}` project specification file.
@@ -104,7 +93,7 @@ Requirements:
 
 ### architecture.md
 
-```
+```md
 Use the @staff-engineer agent to generate a project specification:
 
 Generate the `docs/spec/architecture.md` project specification file.
@@ -124,7 +113,7 @@ Requirements:
 
 ### security.md
 
-```
+```md
 Use the @staff-engineer agent to generate a project specification:
 
 Generate the `docs/spec/security.md` project specification file.
@@ -144,7 +133,7 @@ Requirements:
 
 ### operations.md
 
-```
+```md
 Use the @staff-engineer agent to generate a project specification:
 
 Generate the `docs/spec/operations.md` project specification file.
@@ -164,7 +153,7 @@ Requirements:
 
 ### performance.md
 
-```
+```md
 Use the @staff-engineer agent to generate a project specification:
 
 Generate the `docs/spec/performance.md` project specification file.
@@ -184,7 +173,7 @@ Requirements:
 
 ### code-quality.md
 
-```
+```md
 Use the @staff-engineer agent to generate a project specification:
 
 Generate the `docs/spec/code-quality.md` project specification file.
@@ -204,7 +193,7 @@ Requirements:
 
 ### review-strategy.md
 
-```
+```md
 Use the @staff-engineer agent to generate a project specification:
 
 Generate the `docs/spec/review-strategy.md` project specification file.
@@ -224,7 +213,7 @@ Requirements:
 
 ### testing.md
 
-```
+```md
 Use the @staff-engineer agent to generate a project specification:
 
 Generate the `docs/spec/testing.md` project specification file.

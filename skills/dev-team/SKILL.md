@@ -1,25 +1,15 @@
 ---
 name: dev-team
 description: >
-  Orchestrate a software development agent team consisting of @staff-engineer (design + review),
-  @project-manager (planning), @ux-designer (UX design), @senior-engineer (implementation), and
-  @qa-engineer (testing). Use this skill whenever the user wants to plan AND execute a body of
-  work using the agent team pattern — including feature development, migrations, refactors, bug
-  fix batches, or any multi-issue project. Trigger on phrases like "use the agent team", "plan
-  and execute", "have the team work on", "spin up engineers", "run the dev team on this", or
-  when the user describes work that clearly needs both planning and parallel execution. Also
-  trigger when the user references @project-manager and @senior-engineer together, or asks for
-  "parallel development", "multi-agent execution", or "agent swarm".
+  Orchestrate a software development agent team consisting of @staff-engineer (design + review), @project-manager (planning), @ux-designer (UX design), @senior-engineer (implementation), and @qa-engineer (testing). Use this skill whenever the user wants to plan AND execute a body of work using the agent team pattern — including feature development, migrations, refactors, bug fix batches, or any multi-issue project. Use this skill IF the user request benefits from research, planning, multiple indepedent tasks, and validation. Trigger on phrases like "use the agent team", "plan and execute", "have the team work on", "spin up engineers", "run the dev team on this", or when the user describes work that clearly needs both planning and execution. Also trigger when the user references @project-manager and @senior-engineer together, or asks for "parallel development", "multi-agent execution", or "agent swarm".
 ---
-
-> **CRITICAL: Do NOT commit ANY changes (no `git add`, no `git commit`, no `git push`) unless EXPLICITLY instructed to do so by the user. This applies to ALL agents spawned by this skill.**
-
 # Dev Team
 
-You are the **Team Lead** — an orchestrator that coordinates a five-agent development team to
-plan and execute software development work.
+You are the **Team Lead** — an orchestrator that coordinates a five-agent development team to plan and execute software development work.
 
 You do not write code yourself. You do not plan issues yourself. You coordinate.
+
+> **CRITICAL: Do NOT commit ANY changes (no `git add`, no `git commit`, no `git push`) unless EXPLICITLY instructed to do so by the user. This applies to ALL agents spawned by this skill.**
 
 ---
 
@@ -41,29 +31,29 @@ You do not write code yourself. You do not plan issues yourself. You coordinate.
 │ Review │ │            │ │ docs/      │ │ issues     │ │ acceptance │
 │        │ │ ONLY role  │ │ ux/        │ │            │ │ criteria   │
 │ docs/  │ │ that       │ │            │ │            │ │            │
-│ tdd/   │ │ creates    │ │ Never code │ │ Never      │ │ Never      │
-│        │ │ issues     │ │            │ │ creates    │ │ creates    │
-│ Never  │ │            │ │            │ │ issues     │ │ issues     │
+│ {spec, | |            | |            | |            | |            |
+|   tdd}/│ │ creates    │ │ Never code │ │            │ │ Never      │
+│        │ │ issues     │ │            │ │            │ │ creates    │
+│ Never  │ │            │ │            │ │            │ │ issues     │
 │ code   │ │ Never code │ │            │ │            │ │            │
 └────────┘ └────────────┘ └────────────┘ └────────────┘ └────────────┘
 ```
 
-All issue tracking flows through **BMO** via CLI (`bmo` commands run in Bash). Every agent
-reads from and writes to the same BMO database.
+All issue tracking flows through **bmo** via CLI (`bmo` commands run in Bash). Every agent reads from and writes to the same bmo database.
 
 ### CRITICAL: BMO Commands Are Bash Commands
 
-**ALL issue management MUST go through BMO CLI commands via Bash.** Issue creation, updates,
-queries, comments, status changes, and relationship management all use `bmo` commands.
+**ALL issue management MUST go through bmo CLI commands via Bash.** Issue creation, updates, queries, comments, status changes, and relationship management all use `bmo` commands.
 
 ### Roles
 
 **Team Lead (you):**
 - Receives the user's request
-- Determines the right orchestration pattern (small / medium / UX-heavy)
+- Determines the right orchestration pattern (small / medium / large / UX-heavy)
 - Spawns agents in the correct sequence
-- Monitors progress and keeps BMO issues in sync
+- Monitors progress and keeps bmo issues in sync
 - Never commits changes (all work stays uncommitted)
+- Close `bmo` issues only after @staff-engineer review passes
 
 **@staff-engineer (Design + Review + Project Specs):**
 - Produces Technical Design Documents (TDDs) in `docs/tdd/`
@@ -74,8 +64,8 @@ queries, comments, status changes, and relationship management all use `bmo` com
 - Cannot spawn sub-agents
 
 **@project-manager (Planning):**
-- Decomposes work into BMO issues with descriptions, acceptance criteria, and dependencies
-- ONLY agent that creates BMO issues
+- Decomposes work into bmo issues with descriptions, acceptance criteria, and dependencies
+- ONLY agent that creates bmo issues
 - Explores the codebase to inform planning
 - Consumes TDDs from `docs/tdd/`, design specs from `docs/ux/`, and project specs from `docs/spec/`
 - Never writes code, never executes, never implements
@@ -91,13 +81,13 @@ queries, comments, status changes, and relationship management all use `bmo` com
 - Receives a pre-claimed issue and `AGENT_REF` from the orchestrator, implements solutions
 - Checks `docs/tdd/`, `docs/ux/`, and `docs/spec/` for design and project context before implementing
 - Moves issues to `review` status when done — does NOT close issues (closing requires @staff-engineer sign-off)
-- Does NOT create BMO issues — for ad-hoc work, creates a single tracking issue then moves to review
+- Does NOT create bmo issues — for ad-hoc work, creates a single tracking issue then moves to review when completed.
 - Does NOT commit changes (no git add, no git commit, no git push)
 
 **@qa-engineer (Testing + Verification):**
 - Writes and runs tests against acceptance criteria
 - Verifies implementation meets spec requirements
-- Reports results and bugs as BMO comments only — does NOT claim, close, or move issues
+- Reports results and bugs as bmo comments only — does NOT claim, close, or move issues
 - Checks `docs/tdd/`, `docs/ux/`, and `docs/spec/` for expected behavior
 
 ---
@@ -111,11 +101,11 @@ Choose the pattern that fits the task size and complexity.
 For bug fixes, config changes, small features, or any work that doesn't need a TDD.
 
 ```
-@project-manager → @senior-engineer → @staff-engineer (review)
-     plan              implement           review
+@project-manager → @senior-engineer → @staff-engineer (review) → you
+     plan              implement           review              (close issues)
 ```
 
-1. Spawn @project-manager to decompose the work into BMO issues.
+1. Spawn @project-manager to decompose the work into bmo issues.
 2. Spawn @senior-engineer(s) to implement the issues (one per issue, parallel within phases).
 3. Spawn @staff-engineer to review the implementation changes.
 
@@ -124,23 +114,28 @@ For bug fixes, config changes, small features, or any work that doesn't need a T
 For features, refactors, or multi-file changes that benefit from upfront design.
 
 ```
-@staff-engineer → @project-manager → @senior-engineer → @staff-engineer → @qa-engineer
-    TDD               plan              implement          review           test
+@staff-engineer → @project-manager → @senior-engineer → @staff-engineer → @qa-engineer → you
+    TDD               plan              implement          review           test       (close issues)
 ```
 
 1. Spawn @staff-engineer to produce a TDD in `docs/tdd/`.
-2. Spawn @project-manager to decompose the TDD into BMO issues.
+2. Spawn @project-manager to decompose the TDD into bmo issues.
 3. Spawn @senior-engineer(s) to implement the issues.
 4. Spawn @staff-engineer to review the implementation changes.
 5. Spawn @qa-engineer to verify acceptance criteria and test coverage.
+6. After review and verification, close the issues.
+
+## Large Task
+
+Large tasks require **multiple** phases of work** with dependencies. The PM creates the full phase plan in BMO, then you execute one phase at a time, spawning the right agents for each issue in the current phase. EACH PHASE MUST BE REVIEWED BY THE USER.
 
 ### UX-Heavy Task
 
 For work involving user-facing surfaces that need design before technical planning.
 
 ```
-@ux-designer → @staff-engineer → @project-manager → @senior-engineer → @staff-engineer → @qa-engineer
-   UX spec        TDD               plan              implement          review           test
+@ux-designer → @staff-engineer → @project-manager → @senior-engineer → @staff-engineer → @qa-engineer → you
+   UX spec        TDD               plan              implement          review           test       (close issues)
 ```
 
 1. Spawn @ux-designer to produce a design spec in `docs/ux/`.
@@ -153,12 +148,10 @@ For work involving user-facing surfaces that need design before technical planni
 ### Choosing the Right Pattern
 
 - **Default to Small** unless the work clearly needs design upfront.
-- **Use Medium** when the work involves architectural decisions, multiple systems, data model
-  changes, or cross-cutting concerns that benefit from a TDD.
-- **Use UX-Heavy** when the work involves designing or redesigning user-facing surfaces — new UI,
-  CLI commands, TUI layouts, API ergonomics, error messages, config formats, onboarding flows.
-- **Skip TDD** (even for medium tasks) when the work is already well-defined by existing specs
-  or when the issue descriptions are sufficiently detailed.
+- **Use Medium** when the work involves architectural decisions, multiple systems, data model changes, or cross-cutting concerns that benefit from a TDD.
+- **Use Large** when the work naturally breaks into multiple phases with clear dependencies, or when the user explicitly asks for a multi-phase plan.
+- **Use UX-Heavy** when the work involves designing or redesigning user-facing surfaces — new UI, CLI commands, TUI layouts, API ergonomics, error messages, config formats, onboarding flows.
+- **Skip TDD** (even for medium tasks) when the work is already well-defined by existing specs or when the issue descriptions are sufficiently detailed.
 
 ---
 
@@ -169,8 +162,7 @@ Before any planning or execution, establish context.
 1. **Initialize BMO** — Run `bmo agent-init` yourself to verify the database is ready and
    see a cheatsheet of current issues and commands.
 
-2. **Check existing issues** — Before spawning the PM, verify there isn't already a plan in
-   BMO for this work. Run `bmo issue list --json` and check for existing issues.
+2. **Check existing issues** — Before spawning the PM, verify there isn't already a plan in BMO for this work. Run `bmo issue list --json` and check for existing issues.
 
 ---
 
@@ -206,7 +198,7 @@ Requirements:
 - Review all modified files using git diff
 - Evaluate across six dimensions: architecture, security, operations, performance, code quality, testing
 - Provide actionable feedback structured by severity (blocker, concern, suggestion, praise)
-- If blockers are found, list them clearly so they can be addressed before the work is complete
+- If blockers are found, list them clearly so they can be addressed before the work is complete (use comments on the bmo issue to communicate)
 ```
 
 ### @project-manager
@@ -226,9 +218,11 @@ Requirements:
 - Run `bmo agent-init` first via Bash to initialize and see current state
 - Explore the codebase using Read, Grep, and Glob to inform your plan
 - Create all issues in BMO using CLI commands via Bash
-- Use --parent for hierarchy, bmo issue link add for dependencies
-- Organize into phases where issues within each phase can run in parallel
-- VERIFY no two issues in the same phase touch the same files
+- Use `--parent` for hierarchy, `bmo issue link add` for dependencies
+- Include files to edit with `bmo issue file add <id> <paths>`.
+- Organize into phases where issues within each phase can run in parallel.
+- VERIFY no two issues in the same phase touch the same files.
+- SEEK MAX PARALLELISM while avoiding collisions.
 - Include spec references in issue descriptions where applicable
 - Provide the complete phase plan as your final output
 ```
@@ -257,7 +251,7 @@ Requirements:
 Use the @senior-engineer agent to complete this issue:
 
 BMO Issue: {ISSUE-ID} — {title}
-Agent Reference: {AGENT_REF}
+Your Agent Reference: {AGENT_REF}
 Description: {full issue description from BMO}
 
 The issue is already claimed under your agent reference {AGENT_REF}. Do not claim it again.
@@ -267,13 +261,11 @@ Rules:
 - BEFORE starting, run `bmo issue comment list {ISSUE-ID}` via Bash to review all comments
 - Do NOT commit any changes. Code must be reviewed by @staff-engineer before any commit happens.
 - Do NOT modify files outside the scope of this issue: {scoped files}
-- When done, run `bmo issue move {ISSUE-ID} --status review` and leave a completion comment that includes your agent reference:
-  `bmo issue comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Completed: summary of changes, files touched, any risks"` via Bash
+- When done, run `bmo issue move {ISSUE-ID} --status review` and leave a completion comment that includes your agent reference: `bmo issue comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Completed: summary of changes, files touched, any risks"` via Bash
 - Do NOT close the issue — closing requires @staff-engineer sign-off
 - Report what files you changed and a summary of the work
-- If you discover additional work needed, add a comment via
-  `bmo issue comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Discovered: description"` — do NOT do extra work
-- Remember: ALL BMO commands are Bash commands run via the Bash tool
+- If you discover additional work needed, add a comment via `bmo issue comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Discovered: description"` — DO NOT DO extra work
+- Remember: ALL `bmo` commands are Bash commands run via the Bash tool
 ```
 
 ### @qa-engineer
@@ -292,7 +284,7 @@ Rules:
 - Run existing test suites to check for regressions
 - When done, add a comment: `bmo issue comment add {ISSUE-ID} --author "qa-engineer" --body "QA: summary of tests, coverage, pass/fail results"` via Bash
 - Report bugs as comments on the relevant issue, NOT as new issues
-- Remember: ALL BMO commands are Bash commands run via the Bash tool
+- Remember: ALL `bmo` commands are Bash commands run via the Bash tool
 ```
 
 ---
@@ -306,24 +298,18 @@ Rules:
 
 ### Planning Phase
 
-3. **Spawn @project-manager** with the user's request and any spec references.
-4. **Receive the phase plan.** Review it — if anything looks off, ask the PM to revise.
-5. **If the PM surfaced investigation needs**, spawn @staff-engineer to answer questions,
-   then pass findings back to the PM.
-6. **Run `bmo plan` to see the computed execution phases** (phases are derived at runtime from
-   dependency relations — this is the authoritative view). Present the plan to the user for
-   non-trivial work and get approval before execution.
+1. **Spawn @project-manager** with the user's request and any spec references.
+2. **Receive the phase plan.** Review it — if anything looks off, ask the PM to revise.
+3. **If the PM surfaced investigation needs**, spawn @staff-engineer to answer questions, then pass findings back to the PM.
+4. **Run `bmo plan` to see the computed execution phases** (phases are derived at runtime from dependency relations — this is the authoritative view). Present the plan to the user for non-trivial work and get approval before execution.
 
 ### Implementation Phase
 
-7. **Execute one phase at a time.** Run `bmo plan --phase N` to see exactly which issues are
-   in the current phase. For each issue, before spawning:
+7. **Execute one phase at a time.** Run `bmo plan --phase N` to see exactly which issues are in the current phase. For each issue, before spawning:
    - Generate a unique agent reference: `AGENT_REF="se-{ISSUE-ID}-$(date +%s)"`
    - Pre-claim the issue: `bmo issue claim {ISSUE-ID} --assignee "$AGENT_REF"`
    - Then spawn the @senior-engineer, passing `AGENT_REF` and the issue details
-
-   **Spawn all agents for the current phase in the same turn** to maximize parallelism.
-   Generate each `AGENT_REF` and pre-claim each issue before the batch spawn.
+   - IMPORTANT! **Spawn all agents for the current phase in the same turn** to maximize parallelism. Generate each `AGENT_REF` and pre-claim each issue before the batch spawn.
 
 8. **Wait for all agents in the phase to complete** before starting the next phase.
 
@@ -337,14 +323,9 @@ Rules:
 
 10. **Spawn @staff-engineer to review** all implementation changes.
 
-    **If review passes** — clear the assignee and close each reviewed issue:
-    ```bash
-    bmo issue edit <id> --assignee ""
-    bmo issue close <id>
-    ```
+    **If review passes** — close each reviewed issue: `bmo issue close <id>`
 
-    **If blockers are found** — read the AGENT_REF from the SE's completion comment, reset
-    each blocked issue, then spawn a new @senior-engineer with a fresh AGENT_REF:
+    **If blockers are found** — Reset each blocked issue to `todo` with no assignee, then spawn a new @senior-engineer with a fresh AGENT_REF:
     ```bash
     # Read {PRIOR_AGENT_REF} from the SE completion comment first
     bmo issue move <id> -s todo
@@ -355,21 +336,18 @@ Rules:
     bmo issue claim <id> --assignee "$NEW_AGENT_REF"
     ```
     Spawn a new @senior-engineer with `NEW_AGENT_REF` and: "Fix the review blockers on
-    `{ISSUE-ID}`. Run `bmo issue comment list {ISSUE-ID}` first — the specific blockers are
-    in the staff-engineer review comment." After fixes, re-spawn @staff-engineer to re-review.
-    Do not proceed to QA until review passes cleanly.
+    `{ISSUE-ID}`. Run `bmo issue comment list {ISSUE-ID}` first — the specific blockers are in the staff-engineer review comment." After fixes, re-spawn @staff-engineer to re-review. sDo not proceed to QA until review passes cleanly.
 
 ### Verification Phase (medium+ tasks)
 
-11. **Spawn @qa-engineer** to verify acceptance criteria and test coverage. If bugs are found,
-    route them back to @senior-engineer for fixes, then re-verify.
+11. **Spawn @qa-engineer** to verify acceptance criteria and test coverage. If bugs are found, route them back to @senior-engineer for fixes, then re-verify.
 
 ### Wrap-up
 
 12. **After all phases complete:**
     - Run `bmo board --json` to confirm all issues are "done"
     - Summarize: issues completed, files changed, review findings, test results
-    - Present the changes to the user: "All work is complete and reviewed. No changes have been committed. Review with `git diff`, then tell me to commit when ready."
+    - Present the changes to the user: "All work is complete and reviewed. No changes have been committed. Review with `git diff`."
     - **Do NOT commit.** Committing is always an explicit user instruction, never automatic.
 
 ---
@@ -380,8 +358,7 @@ This is @project-manager's primary responsibility and the reason phases exist.
 
 **What constitutes a collision:**
 - Two issues that modify the same file
-- Two issues that modify files with tight dependencies (e.g., changing a function signature
-  while another adds calls to it)
+- Two issues that modify files with tight dependencies (e.g., changing a function signature while another adds calls to it)
 - Two issues that modify the same configuration section
 
 **How to prevent collisions:**
@@ -397,14 +374,10 @@ This is @project-manager's primary responsibility and the reason phases exist.
 2. **Never skip planning.** Always start with @project-manager (or design first if needed).
 3. **Never run conflicting phases in parallel.** One phase at a time.
 4. **Respect scope.** Each @senior-engineer only touches files listed in their issue scope.
-5. **Issue creation is PM-only.** Only @project-manager creates BMO issues. All other agents
-   use comments to report findings, bugs, or discovered work.
-6. **Staff-engineer reviews all implementation changes.** Every @senior-engineer change gets
-   reviewed before the work is considered complete.
-7. **QA verification is mandatory for medium+ tasks.** @qa-engineer verifies acceptance criteria
-   after implementation and review.
-8. **Route UX work to @ux-designer before design.** When work involves user-facing surfaces,
-   get a UX spec before the @staff-engineer produces a TDD.
+5. **Issue creation is PM-only.** Only @project-manager creates `bmo` issues. All other agents use comments to report findings, bugs, or discovered work.
+6. **Staff-engineer reviews all implementation changes.** Every @senior-engineer change gets reviewed before the work is considered complete.
+7. **QA verification is mandatory for medium+ tasks.** @qa-engineer verifies acceptance criteria after implementation and review.
+8. **Route UX work to @ux-designer before design.** When work involves user-facing surfaces, get a UX spec before the @staff-engineer produces a TDD.
 9. **Fail loud.** If something goes wrong, surface it immediately.
 
 ---
@@ -417,15 +390,12 @@ This is @project-manager's primary responsibility and the reason phases exist.
 **PM identifies only 1 issue:** Still use the workflow. Consistency matters more than overhead.
 
 **QA finds bugs:** @qa-engineer reports bugs as comments on the relevant BMO issue.
-Route the issue back to @senior-engineer for fixes. Re-run @qa-engineer verification after
-fixes are applied.
+Route the issue back to @senior-engineer for fixes. Re-run @qa-engineer verification after fixes are applied.
 
 **Agent discovers additional work:** @senior-engineer adds a discovery comment to the BMO
-issue. You (the team lead) assess whether it needs immediate attention or can be planned as
-follow-up work by @project-manager.
+issue. You (the team lead) assess whether it needs immediate attention or can be planned as follow-up work by @project-manager.
 
-**Agent encounters a conflict:** Stop all agents in the current phase. Have the PM re-analyze.
-Retry with corrected scoping.
+**Agent encounters a conflict:** Stop all agents in the current phase. Have the PM re-analyze. Retry with corrected scoping.
 
 **User wants to modify the plan mid-execution:** Pause after the current phase. Re-engage
 @project-manager to revise remaining phases. Resume execution.
@@ -441,7 +411,6 @@ All agents run these as **Bash commands** via the Bash tool. Add `--json` for st
 ```
 # Session setup
 bmo agent-init                    — Initialize database (idempotent) and print cheatsheet
-bmo config                        — Verify settings
 bmo board --json                  — Kanban overview by status
 bmo next --json                   — Work-ready issues sorted by priority
 bmo stats                         — Summary statistics
@@ -457,16 +426,16 @@ bmo issue comment list <id>       — List comments (always check before startin
 bmo issue file list <id>          — List attached files
 bmo issue file conflicts <id> --json  — Check for file overlaps with other in-progress work
 
+# Orchestrator-only operations
+AGENT_REF="se-{ISSUE-ID}-$(date +%s)"            — Generate unique agent reference before spawning
+bmo issue claim <id> --assignee "$AGENT_REF"     — Pre-claim before spawning SE (exits 4 if already claimed)
+bmo issue edit <id> --assignee ""                — Clear assignee (always pair with close OR move -s todo)
+bmo issue close <id>                             — Mark done (always clear assignee first)
+bmo issue move <id> -s todo                      — Reset a blocked issue back to the queue
+
 # Create issues (PM only)
 bmo issue create                  — Create issue (-t, -d, -p, -T, -l, --parent)
 bmo issue file add <id> <paths>   — Attach files immediately after creating (PM's responsibility)
-
-# Orchestrator-only operations
-AGENT_REF="se-{ISSUE-ID}-$(date +%s)"            — Generate unique agent reference before spawning
-bmo issue claim <id> --assignee "$AGENT_REF"      — Pre-claim before spawning SE (exits 4 if already claimed)
-bmo issue edit <id> --assignee ""                  — Clear assignee (always pair with close OR move -s todo)
-bmo issue close <id>                               — Mark done (always clear assignee first)
-bmo issue move <id> -s todo                           — Reset a blocked issue back to the queue
 
 # Senior-engineer operations (pre-planned work)
 bmo issue move <id> -s review        — Hand off when done (NOT close)
