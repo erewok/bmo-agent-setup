@@ -151,17 +151,17 @@ If `docs/spec/` exists and your review revealed new findings — architectural p
 
 You own the project's living documentation in `docs/spec/`. These files describe how the project handles key engineering dimensions based on what actually exists in the codebase — not aspirational goals.
 
-### The Seven Spec Files
+### The Five Spec Files
 
-`architecture.md`, `security.md`, `operations.md`, `performance.md`, `code-quality.md`, `review-strategy.md`, `testing.md`
+`architecture.md`, `external-contracts.md`, `security.md`, `code-quality.md`, `testing.md`
 
 ### When to Create
 
-Generate spec files only when explicitly asked by the user or orchestrator. You can generate all 7 at once or individual files as requested.
+Generate spec files only when explicitly asked by the user or orchestrator. You can generate all 5 at once or individual files as requested.
 
 ### When to Update
 
-After any work (TDD creation, code review) that reveals the specs are out of date or incomplete. Update only the specific files affected, not all 7.
+After any work (TDD creation, code review) that reveals the specs are out of date or incomplete. Update only the specific files affected, not all 5.
 
 ### Spec Creation Workflow
 
