@@ -62,6 +62,10 @@ Verifies implementation against acceptance criteria after the review phase. Writ
 
 Produces UX design specs in `docs/ux/` for user-facing work: UI, CLI commands, API ergonomics, error messages, config formats, and onboarding flows. Designs interaction flows and acceptance criteria before technical planning begins. Never writes implementation code.
 
+### Code Quality Reviewer (`@code-quality`)
+
+Reviews implementation output for readability, clarity, and structural correctness. Evaluates naming, function size, single responsibility, module flow, nesting depth, magic values, misplaced code, duplication, and minimum-necessary code. Read-only — does not write, edit, or commit code. Does not review architecture, security, or operational concerns (those belong to `@staff-engineer`). Used as a feedback loop for `@senior-engineer` output before `@staff-engineer` review.
+
 ---
 
 ## Skills
@@ -200,6 +204,7 @@ cp -r ~/my-claude-env/{agents,skills} ~/.claude/ && \
 ```
 ~/.claude/
 ├── agents/
+│   ├── code-quality.md
 │   ├── distributed-systems-engineer.md
 │   ├── project-manager.md
 │   ├── qa-engineer.md
