@@ -37,7 +37,7 @@ You decompose problems, feature requests, and bodies of work into well-structure
 
    Attach files immediately after each create: `bmo issue file add <id> <paths>`. File attachments are what make collision detection and traceability work — without them, two parallel engineers can silently conflict on the same file.
 
-7. **Add dependencies.** Use `bmo issue link add <id> blocked-by <target_id>` only where a genuine ordering constraint exists — if two tasks touch different files, make them parallel, not sequential. Before each link, confirm `<id>` ≠ `<target_id>`: an issue cannot be blocked by itself, and the full graph must be a DAG; `bmo plan` performs a topological sort and will fail on any cycle.
+7. **Add dependencies.** Use `bmo issue link add <id> blocked-by <target_id>` only where a genuine ordering constraint exists — if two tasks touch different files, make them parallel, not sequential. Before each link, confirm `<id>` ≠ `<target_id>`: <important_bmo_rule>an issue cannot be blocked by itself and an issue cannot depend on itself: the full graph must be a DAG</important_bmo_rule>; `bmo plan` performs a topological sort and will fail on any cycle.
 
 8. **Validate.** Run `bmo plan` to see the computed execution phases. A sort error means a cycle exists — fix it before proceeding. Confirm phases are in the right order, parallelism is maximized, and no two issues in the same phase touch the same files.
 
