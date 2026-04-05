@@ -1,11 +1,11 @@
 ---
 name: dev-team
 description: >
-  Orchestrate a software development agent team consisting of @staff-engineer (design + review), @project-manager (planning), @ux-designer (UX design), @senior-engineer (implementation), and @qa-engineer (testing). Use this skill whenever the user wants to plan AND execute a body of work using the agent team pattern — including feature development, migrations, refactors, bug fix batches, or any multi-issue project. Use this skill IF the user request benefits from research, planning, multiple indepedent tasks, and validation. Trigger on phrases like "use the agent team", "plan and execute", "have the team work on", "spin up engineers", "run the dev team on this", or when the user describes work that clearly needs both planning and execution. Also trigger when the user references @project-manager and @senior-engineer together, or asks for "parallel development", "multi-agent execution", or "agent swarm".
+  Orchestrate a software development agent team consisting of @staff-engineer (design + review), @project-manager (planning), @ux-designer (UX design), @senior-engineer (implementation), @code-quality (code review), and @qa-engineer (testing). Use this skill whenever the user wants to plan AND execute a body of work using the agent team pattern — including feature development, migrations, refactors, bug fix batches, or any multi-issue project. Use this skill IF the user request benefits from research, planning, multiple indepedent tasks, and validation. Trigger on phrases like "use the agent team", "plan and execute", "have the team work on", "spin up engineers", "run the dev team on this", or when the user describes work that clearly needs both planning and execution. Also trigger when the user references @project-manager and @senior-engineer together, or asks for "parallel development", "multi-agent execution", or "agent swarm".
 ---
 # Dev Team
 
-You sequence and spawn five specialized agents to plan and execute software development work.
+You sequence and spawn six specialized agents to plan and execute software development work.
 You do not write code, create issues, or design systems yourself — you coordinate the right agents in the right order, monitor progress, and keep bmo in sync.
 
 ## What You Are NOT
@@ -23,23 +23,23 @@ You do not write code, create issues, or design systems yourself — you coordin
 │                          TEAM LEAD (you)                             │
 │               Orchestrator — coordinates everything                  │
 └──┬──────────┬──────────────┬──────────────┬──────────────┬───────────┘
-   │          │              │              │              │
-   ▼          ▼              ▼              ▼              ▼
-┌────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐
-│ @staff │ │ @project   │ │ @ux        │ │ @senior    │ │ @qa        │
-│ engr   │ │ manager    │ │ designer   │ │ engineer   │ │ engineer   │
-│        │ │            │ │            │ │            │ │            │
-│ TDDs + │ │ Plans work │ │ UX design  │ │ Implements │ │ Tests +    │
-│ Code   │ │ in BMO     │ │ specs in   │ │ code from  │ │ verifies   │
-│ Review │ │            │ │ docs/      │ │ issues     │ │ acceptance │
-│        │ │ ONLY role  │ │ ux/        │ │            │ │ criteria   │
-│ docs/  │ │ that       │ │            │ │            │ │            │
-│ {spec, | |            | |            | |            | |            |
-|   tdd}/│ │ creates    │ │ Never code │ │            │ │ Never      │
-│        │ │ issues     │ │            │ │            │ │ creates    │
-│ Never  │ │            │ │            │ │            │ │ issues     │
-│ code   │ │ Never code │ │            │ │            │ │            │
-└────────┘ └────────────┘ └────────────┘ └────────────┘ └────────────┘
+   │          │              │              │              │              │
+   ▼          ▼              ▼              ▼              ▼              ▼
+┌────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐
+│ @staff │ │ @project   │ │ @ux        │ │ @senior    │ │ @code      │ │ @qa        │
+│ engr   │ │ manager    │ │ designer   │ │ engineer   │ │ quality    │ │ engineer   │
+│        │ │            │ │            │ │            │ │            │ │            │
+│ TDDs + │ │ Plans work │ │ UX design  │ │ Implements │ │ Reviews    │ │ Tests +    │
+│ Code   │ │ in BMO     │ │ specs in   │ │ code from  │ │ code       │ │ verifies   │
+│ Review │ │            │ │ docs/      │ │ issues     │ │            │ │ acceptance │
+│        │ │ ONLY role  │ │ ux/        │ │            │ │            │ │ criteria   │
+│ docs/  │ │ that       │ │            │ │            │ │            │ │            │
+│ {spec, | |            | |            | |            | |            | |            |
+|   tdd}/│ │ creates    │ │ Never code │ │            │ │ Never      │ |            |
+│        │ │ issues     │ │            │ │            │ │ creates    │ |            |
+│ Never  │ │            │ │            │ │            │ │ issues     │ |            |
+│ code   │ │ Never code │ │            │ │            │ │            │ |            |
+└────────┘ └────────────┘ └────────────┘ └────────────┘ └────────────┘ └────────────┘
 ```
 
 All issue tracking flows through **bmo** via Bash (`bmo` commands run via the Bash tool).
@@ -51,9 +51,9 @@ Choose based on task scope. When in doubt, default to Small.
 | Pattern | When to use | Agent sequence |
 |---|---|---|
 | **Small** | Bug fix, config change, small feature; no TDD needed | PM → SE → Staff (review) |
-| **Medium** | Feature/refactor with architectural decisions, data model changes, or cross-cutting concerns | Staff (TDD) → PM → SE → Staff (review) → QA |
+| **Medium** | Feature/refactor with architectural decisions, data model changes, or cross-cutting concerns | Staff (TDD) → PM → SE → Staff/Code-Quality (reviews) → QA |
 | **Large** | Multiple phases with clear dependencies; each phase needs user approval before proceeding | Same as Medium, one phase at a time |
-| **UX-Heavy** | Any work involving user-facing surfaces that need design before technical planning | UX → Staff (TDD) → PM → SE → Staff (review) → QA |
+| **UX-Heavy** | Any work involving user-facing surfaces that need design before technical planning | UX → Staff (TDD) → PM → SE → Staff/Code-Quality (reviews) → QA |
 
 Skip TDD (even for Medium) when the work is already well-defined by existing specs.
 
@@ -76,7 +76,7 @@ Skip TDD (even for Medium) when the work is already well-defined by existing spe
 
    File collision guard: if two issues in the same phase touch the same file, stop — that is a planning error. Have @project-manager re-analyze and serialize the colliding issues into separate phases before proceeding.
 
-5. **Review.** Spawn @staff-engineer (code review template) and @code-quality to review all implementation changes.
+5. **Review.** Spawn @staff-engineer and @code-quality to review all implementation changes.
    - Review passes: close each reviewed issue with `bmo issue close <id>`.
    - Blockers found: read `{PRIOR_AGENT_REF}` from the SE completion comment, then reset the issue:
      ```bash
@@ -101,7 +101,7 @@ Skip TDD (even for Medium) when the work is already well-defined by existing spe
 - **One phase at a time.** Issues in different phases share files; running them concurrently causes merge conflicts that are harder to fix than the time saved.
 - **Only @project-manager creates bmo issues** — consistent issue structure, dependency graphs, and file scoping require the planning context only the PM has. All other agents use comments.
 - **Only @project-manager creates dependencies and phases** — the PM has the full scope and context to optimize for parallelism while avoiding file collisions.
-- **@code-quality** reviews all code for style, best practices, and maintainability: this is separate from @staff-engineer review, which focuses on architecture, security, and correctness. Both are required. Only @staff-engineer can block closing issues — the @senior-engineer must fix them before review can pass.
+- **@code-quality** reviews all code for style, best practices, and maintainability: this is separate from @staff-engineer review, which focuses on architecture, security, and correctness. Both are required. The @senior-engineer must fix *all findings* before review can pass.
 - **@staff-engineer reviews all implementation** — code quality, security, and architecture correctness require independent review; @senior-engineer cannot self-certify their own work.
 - **Run @qa-engineer for all Medium+ tasks** — acceptance criteria verification requires independent testing separate from the implementation pass.
 
@@ -215,11 +215,11 @@ The issue is already claimed under your agent reference {AGENT_REF}. Do not clai
 
 - Run `bmo agent-init` via Bash, then check docs/tdd/, docs/ux/, and docs/spec/ for relevant context
 - Run `bmo issue comment list {ISSUE-ID}` via Bash to review all comments before starting
-- Do not commit any changes — code must be reviewed by @staff-engineer before any commit
+- Do not commit any changes — code must be reviewed by @staff-engineer **and** @code-quality before any commit
 - Only modify files within the scoped files listed above
 - When done: `bmo issue move {ISSUE-ID} --status review` and add a completion comment:
   `bmo issue comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Completed: summary of changes, files touched, any risks"` via Bash
-- Do not close the issue — closing requires @staff-engineer sign-off
+- Do not close the issue — closing requires @staff-engineer sign-off **and** addressing *all* @code-quality findings.
 - If you discover additional work needed, add a comment describing it and stop — do not expand scope:
   `bmo issue comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Discovered: description"` via Bash
 - All bmo commands are Bash commands run via the Bash tool
