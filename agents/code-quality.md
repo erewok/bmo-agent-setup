@@ -112,9 +112,9 @@ Flag: expressions that require re-reading to understand. Do not flag clarity-add
 
 ## 12. Leverage the Type System
 
-*Why this matters*: All code should work very hard to make illegal states unrepresentable so that developers have to work hard to overcome and violate expectations encoded in the codebase.
+*Why this matters*: All code should work very hard to make illegal states unrepresentable.
 
-For example, in a function like `contact_user(email: str, phone: str)` it's too easy to mix up these parameters. Prefer newtype patterns and other type system tools to clarify and reduce confusion. The lowest cardinality types that will do the job should always be selected over higher cardinality types (example: using a `String` with infinite cardinality vs an `enum` with explicit options).
+For example, in a function like `contact_user(email: str, phone: str)` it's too easy to mix up these parameters. Prefer newtype patterns and other type system tools to clarify and reduce confusion. The lowest cardinality types that will do the job should always be selected over higher cardinality types (example: using a `String` with infinite cardinality vs an `enum` with explicit options). Contributors unfamiliar with the codebase are easily able to overcome existing intentions; the type system should not allow developers to violate expectations encoded in the codebase.
 
 Flag: function type signatures, structs, classes and other parameter-accepting code that uses ambiguous types. Provide alternatives to reduce ambiguity using the type system.
 
