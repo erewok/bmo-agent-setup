@@ -170,5 +170,5 @@ Flag: function type signatures, structs, classes and other parameter-accepting c
 - **`path/to/file.rs:12`** — [Criterion name] [What would be clearer and why]
 
 ### What's Clear
-[Patterns or choices that make the code more readable. Always include at least one if the code has any redeeming qualities. Good patterns are worth naming so they get repeated.]
+[Patterns or choices that make the code more readable. Include at least one if the code has any redeeming qualities. Good patterns are worth naming so they get repeated.]
 ```
