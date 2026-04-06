@@ -1,7 +1,7 @@
 ---
 name: dev-team
 description: >
-  Orchestrate a software development agent team consisting of @staff-engineer (design + review), @project-manager (planning), @ux-designer (UX design), @senior-engineer (implementation), @code-quality (apply fixes), and @qa-engineer (testing). Use this skill whenever the user wants to plan AND execute a body of work using the agent team pattern — including feature development, migrations, refactors, bug fix batches, or any multi-issue project. Use this skill IF the user request benefits from research, planning, multiple indepedent tasks, and validation. Trigger on phrases like "use the agent team", "plan and execute", "have the team work on", "spin up engineers", "run the dev team on this", or when the user describes work that clearly needs both planning and execution. Also trigger when the user references @project-manager and @senior-engineer together, or asks for "parallel development", "multi-agent execution", or "agent swarm".
+  Orchestrate a software development agent team consisting of @staff-engineer (design + review), @project-manager (planning), @ux-designer (UX design), @senior-engineer (implementation), and @qa-engineer (testing). Use this skill whenever the user wants to plan AND execute a body of work using the agent team pattern — including feature development, migrations, refactors, bug fix batches, or any multi-issue project. Use this skill IF the user request benefits from research, planning, multiple indepedent tasks, and validation. Trigger on phrases like "use the agent team", "plan and execute", "have the team work on", "spin up engineers", "run the dev team on this", or when the user describes work that clearly needs both planning and execution. Also trigger when the user references @project-manager and @senior-engineer together, or asks for "parallel development", "multi-agent execution", or "agent swarm".
 ---
 # Dev Team
 
@@ -51,9 +51,9 @@ Choose based on task scope. When in doubt, default to Small.
 | Pattern | When to use | Agent sequence |
 |---|---|---|
 | **Small** | Bug fix, config change, small feature; no TDD needed | PM → SE → Staff (review) |
-| **Medium** | Feature/refactor with architectural decisions, data model changes, or cross-cutting concerns | Staff (TDD) → PM → SE → Code-Quality apply fixes -> staff-engineer review → QA |
+| **Medium** | Feature/refactor with architectural decisions, data model changes, or cross-cutting concerns | Staff (TDD) → PM → SE → staff-engineer review → QA |
 | **Large** | Multiple phases with clear dependencies; each phase needs user approval before proceeding | Same as Medium, one phase at a time |
-| **UX-Heavy** | Any work involving user-facing surfaces that need design before technical planning | UX → Staff (TDD) → PM → SE → Code-Quality apply fixes -> staff-engineer review → QA |
+| **UX-Heavy** | Any work involving user-facing surfaces that need design before technical planning | UX → Staff (TDD) → PM → SE → staff-engineer review → QA |
 
 Skip TDD (even for Medium) when the work is already well-defined by existing specs.
 
@@ -75,8 +75,6 @@ Skip TDD (even for Medium) when the work is already well-defined by existing spe
    Generate all `AGENT_REF`s and pre-claim all issues before the batch spawn so all agents in the phase start in the same turn. Wait for all agents in the phase to complete before starting the next phase.
 
    File collision guard: if two issues in the same phase touch the same file, stop — that is a planning error. Have @project-manager re-analyze and serialize the colliding issues into separate phases before proceeding.
-
-5. **Fix common issues** Spawn @code-quality to fix any code quality issues. This is a separate pass from @staff-engineer review. Wait for completion before spawning @staff-engineer for review.
 
 5. **Review.** Spawn @staff-engineer to review all implementation changes.
    - Review passes: close each reviewed issue with `bmo issue close <id>`.
@@ -103,9 +101,8 @@ Skip TDD (even for Medium) when the work is already well-defined by existing spe
    - **One phase at a time.** Issues in different phases share files; running them concurrently causes merge conflicts that are harder to fix than the time saved.
    - **Only @project-manager creates bmo issues** — consistent issue structure, dependency graphs, and file scoping require the planning context only the PM has. All other agents use comments.
    - **Only @project-manager creates dependencies and phases** — the PM has the full scope and context to optimize for parallelism while avoiding file collisions.
-3. **Fix and refactor by spawning @code-quality** - fix and refactor code changes for clarity and maintainability. This is separate from @staff-engineer review, which focuses on architecture, security, and correctness.
-4. **@staff-engineer reviews all implementation** — security, performance, and architecture correctness require independent review; @senior-engineer cannot self-certify their own work. The @senior-engineer must fix *all findings* before review can pass.
-5. **Run @qa-engineer for all Medium+ tasks** — acceptance criteria verification requires independent testing separate from the implementation pass.
+3. **@staff-engineer reviews all implementation** — security, performance, code quality, and architecture correctness require this independent review. The@senior-engineer cannot self-certify their own work. The @senior-engineer must fix *all findings* raised by review and before a task can be completed.
+4. **Run @qa-engineer for all Medium+ tasks** — acceptance criteria verification requires independent testing separate from the implementation pass.
 
 ---
 
@@ -144,19 +141,6 @@ Requirements:
 - Post findings as comments on the relevant bmo issue so blockers are visible before the work is closed
 ```
 
-
-### @code-quality (Code Passes Quality Standards)
-
-```
-Use the @code-quality agent to fix implementation changes:
-
-Review the changes made by @senior-engineer for this work.
-
-Requirements:
-- Review all modified files using git diff.
-- Make sure to fix BLOCKERS that would prevent merging as well as CONCERNS that should be addressed but aren't showstoppers. Raise SUGGESTIONS for improvement, and PRAISE for well-done aspects.
-- Post a comment with changes on the relevant bmo issue.
-```
 
 
 ### @project-manager
