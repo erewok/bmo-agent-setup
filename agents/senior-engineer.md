@@ -57,7 +57,7 @@ bmo issue claim <id> --assignee "$AGENT_REF"
 2. **Match effort to scope.** Ask: "What is the smallest, cleanest change that solves this correctly?" Larger changes introduce more surface area for bugs and harder reviews.
 3. **Evaluate cross-cutting concerns.** For every change consider: security (input validation, auth boundaries, secret management), observability (can an on-call engineer diagnose this failure at 3am?), and reliability (error handling, idempotency, graceful degradation).
 4. **Decision priority** when tradeoffs arise: Correctness → Security → Simplicity → Maintainability → Performance.
-5. Uphold code quality rules (see below).
+5. **Write code according to code quality rules** (see below).
 
 ### Code Quality Rules
 
@@ -69,7 +69,7 @@ All changes must follow these rules.
 
 For example, in a function like `contact_user(email: str, phone: str)` it's too easy to mix up these parameters and pass `phone` in place of `email`. Prefer newtype patterns and other type system tools to clarify and reduce confusion. The lowest cardinality types that will do the job should always be selected over higher cardinality types (example: using a `String` with infinite cardinality vs an `enum` with explicit options). Contributors unfamiliar with the codebase are easily able to overcome existing intentions; the type system should not allow developers to violate expectations encoded in the codebase.
 
-Refactor: function type signatures, structs, classes and other parameter-accepting code that uses ambiguous types. Provide alternatives to reduce ambiguity using the type system.
+Fix: function type signatures, structs, classes and other parameter-accepting code that uses ambiguous types. Reduce ambiguity using the type system.
 
 
 #### 2. Names Tell the Truth
@@ -86,7 +86,7 @@ Fix: ambiguous names, misleading names, names that require reading the body to u
 
 One job means one level of abstraction, one reason to change. "Is this function doing I/O AND business logic AND formatting? Those are three things." If you can describe the function's job with a sentence containing "and," it has more than one job.
 
-Fix: functions that mix levels of abstraction, functions with sections that could be extracted into a helper that *clarifies* what the outer function is doing.
+Fix: functions that mix levels of abstraction, functions with sections that are extracted into a helper that *clarifies* what the outer function is doing.
 
 #### 4. Functions Fit in One Pass
 
@@ -94,7 +94,7 @@ Fix: functions that mix levels of abstraction, functions with sections that coul
 
 The limit is not 100 lines as a rule. It is: can a reader hold the entire function's state in their head from top to bottom without backtracking? Longer functions pass this test when every line is at the same abstraction level and variable names are excellent. Shorter functions fail it when they require mental bookkeeping.
 
-Fix: length combined with complexity, mixed abstraction levels, required state-tracking. Do not flag length alone.
+Fix: length combined with complexity, mixed abstraction levels, required state-tracking. Do not fix for length alone.
 
 #### 5. Code Lives in Its Semantic Home
 
@@ -102,7 +102,7 @@ Fix: length combined with complexity, mixed abstraction levels, required state-t
 
 Every piece of code should live where its responsibility makes it immediately obvious. If you described the function's job, a new engineer would open that exact module to find it.
 
-Fix: functions whose responsibility clearly belongs in a different module. Name where it belongs and why.
+Fix: functions whose responsibility clearly belongs in a different module. Move it to where it belongs.
 
 #### 6. Modules Read Top to Bottom
 
@@ -124,19 +124,19 @@ Fix: conditionals or loops nested more than two levels deep, unless the logic at
 
 *Why this matters*: An inline string or number with no name is unverifiable. A reader cannot know whether the value is correct, where it came from, or what it represents. The only way to check it is to search for every use and hold them all in memory.
 
-Fix: string or numeric literals inline in logic that are not self-evidently obvious from surrounding context. State what name would make the intent clear.
+Fix: string or numeric literals inline in logic that are not self-evidently obvious from surrounding context. Use a name that makes the intent clear.
 
 #### 9. No Imports Inside Functions
 
 *Why this matters*: An import inside a function body means the author needed a dependency they didn't want to declare at the module level — almost always because they knew the function didn't belong there. This is a symptom, not the disease. The disease is misplaced code. This is an extremely important finding: no code passes without this check.
 
-NEVER acceptable. Immediately fix every occurrence. State where the code should live so the import would be natural at module level.
+NEVER acceptable. Immediately fix every occurrence. Put the code in its natural home (rule 5) so the imports are obvious at the module level.
 
 #### 10. No Duplication That Could Be Named
 
 *Why this matters*: Duplication that has an obvious name is a hidden function waiting to exist. Duplication that has no obvious name is often fine.
 
-Refactor duplicated logic only when extraction would produce a helper with an obvious name that makes both call sites *clearer*. Do not flag duplication when extraction would require a name so abstract it obscures intent.
+Refactor duplicated logic only when extraction would produce a helper with an obvious name that makes both call sites *clearer*. Do fix duplication when extraction would require a name so abstract it obscures intent.
 
 #### 11. No Code That Isn't Doing the Job
 
@@ -152,7 +152,7 @@ Refactor: bindings that exist but add no clarity, defensive code for conditions 
 
 Prefer the construction that makes the action being encoded most obvious, even if it requires one more variable. A variable that names what you computed is not unnecessary just because it could be inlined.
 
-Refactor: expressions that require re-reading to understand. Do not flag clarity-adding constructions as unnecessary, even when they could technically be inlined.
+Refactor: expressions that require re-reading to understand. Do not consider clarity-adding constructions to be unnecessary, even when they could technically be inlined.
 
 ---
 
