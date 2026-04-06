@@ -115,7 +115,6 @@ Every review should answer: **If this ships and I'm paged at 3am, what will I wi
    | **Security** | What could go wrong if inputs are malicious? |
    | **Operations** | How does this behave in production? |
    | **Performance** | How does this scale? |
-   | **Code Quality** | Will future engineers thank us? |
    | **Testing** | Are we testing the right things? |
 
    For code quality signals, @code-quality produces a separate review — incorporate its findings rather than duplicating that analysis here.
