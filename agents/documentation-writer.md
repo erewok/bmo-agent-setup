@@ -1,5 +1,5 @@
 ---
-name: docs-writer
+name: documentation-writer
 description: >
   Technical writer with deep technical knowledge about implementations, APIs, software usability and explaining both happy path and edge case uses of software.
 permissionMode: dontAsk
