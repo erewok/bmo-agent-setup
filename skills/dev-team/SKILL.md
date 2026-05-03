@@ -59,7 +59,7 @@ Skip TDD (even for Medium) when the work is already well-defined by existing spe
 
 ## Workflow
 
-1. **Initialize.** Run `bmo agent-init` to verify the database is ready. Run `bmo issue list --json` to check for existing issues — don't re-plan work already in bmo.
+1. **Initialize.** Run `bmo agent-init` to verify the database is ready. Run `bmo list --json` to check for existing issues — don't re-plan work already in bmo.
 
 2. **Design** (Medium+ / UX-Heavy only).
    - UX-Heavy: Spawn @ux-designer first; wait for the spec in `docs/ux/`.
@@ -69,7 +69,7 @@ Skip TDD (even for Medium) when the work is already well-defined by existing spe
 
 4. **Implement one phase at a time.** Run `bmo plan --phase N` to see which issues are ready. For each issue in the phase:
    - Generate a unique agent reference: `AGENT_REF="se-{ISSUE-ID}-$(date +%s)"`
-   - Pre-claim: `bmo issue claim {ISSUE-ID} --assignee "$AGENT_REF"`
+   - Pre-claim: `bmo claim {ISSUE-ID} --assignee "$AGENT_REF"`
    - Spawn @senior-engineer using the SE template, passing `AGENT_REF` and full issue details.
 
    Generate all `AGENT_REF`s and pre-claim all issues before the batch spawn so all agents in the phase start in the same turn. Wait for all agents in the phase to complete before starting the next phase.
@@ -77,16 +77,16 @@ Skip TDD (even for Medium) when the work is already well-defined by existing spe
    File collision guard: if two issues in the same phase touch the same file, stop — that is a planning error. Have @project-manager re-analyze and serialize the colliding issues into separate phases before proceeding.
 
 5. **Review.** Spawn @staff-engineer to review all implementation changes.
-   - Review passes: close each reviewed issue with `bmo issue close <id>`.
+   - Review passes: close each reviewed issue with `bmo close <id>`.
    - Blockers found: read `{PRIOR_AGENT_REF}` from the SE completion comment, then reset the issue:
      ```bash
-     bmo issue move <id> -s todo
-     bmo issue edit <id> --assignee ""
-     bmo issue comment add <id> --author "orchestrator" --body "Returned to todo: blockers found in review. Prior work by {PRIOR_AGENT_REF} — see completion comment and staff-engineer review above."
+     bmo move <id> -s todo
+     bmo edit <id> --assignee ""
+     bmo comment add <id> --author "orchestrator" --body "Returned to todo: blockers found in review. Prior work by {PRIOR_AGENT_REF} — see completion comment and staff-engineer review above."
      NEW_AGENT_REF="se-{ISSUE-ID}-$(date +%s)"
-     bmo issue claim <id> --assignee "$NEW_AGENT_REF"
+     bmo claim <id> --assignee "$NEW_AGENT_REF"
      ```
-     Spawn a new @senior-engineer with `NEW_AGENT_REF`: "Fix the review blockers on `{ISSUE-ID}`. Run `bmo issue comment list {ISSUE-ID}` first — blockers are in the staff-engineer review comment." Re-run @staff-engineer review after fixes. Do not proceed to QA until review passes cleanly.
+     Spawn a new @senior-engineer with `NEW_AGENT_REF`: "Fix the review blockers on `{ISSUE-ID}`. Run `bmo comment list {ISSUE-ID}` first — blockers are in the staff-engineer review comment." Re-run @staff-engineer review after fixes. Do not proceed to QA until review passes cleanly.
 
 6. **Verify** (Medium+ only). Spawn @qa-engineer to verify acceptance criteria and test coverage. If bugs are found, route back to @senior-engineer for fixes, then re-verify.
 
@@ -160,8 +160,8 @@ Requirements:
 - Run `bmo agent-init` first via Bash to initialize and see current state
 - Explore the codebase using Read, Grep, and Glob to inform your plan
 - Create all issues in bmo using CLI commands via Bash
-- Use `--parent` for hierarchy, `bmo issue link add` for dependencies
-- Attach files to each issue immediately after creating: `bmo issue file add <id> <paths>`
+- Create with `bmo create -t "title" --parent <parent-id>` for hierarchy and use `bmo link add {PARENT-ID} blocks {ISSUE-ID}` for setting task dependencies
+- Attach files to each issue immediately after creating: `bmo file add <BMO-id> <paths>`
 - Organize into phases where issues within each phase can run in parallel
 - Verify no two issues in the same phase touch the same files — serialize collisions into separate phases
 - Maximize parallelism within each phase while avoiding file collisions
@@ -200,14 +200,14 @@ Scoped files: {scoped files from the issue}
 The issue is already claimed under your agent reference {AGENT_REF}. Do not claim it again.
 
 - Run `bmo agent-init` via Bash, then check docs/tdd/, docs/ux/, and docs/spec/ for relevant context
-- Run `bmo issue comment list {ISSUE-ID}` via Bash to review all comments before starting
+- Run `bmo comment list {ISSUE-ID}` via Bash to review all comments before starting
 - Do not commit any changes — code must be reviewed by @staff-engineer **and** before any commit
 - Only modify files within the scoped files listed above
-- When done: `bmo issue move {ISSUE-ID} --status review` and add a completion comment:
-  `bmo issue comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Completed: summary of changes, files touched, any risks"` via Bash
+- When done: `bmo move {ISSUE-ID} --status review` and add a completion comment:
+  `bmo comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Completed: summary of changes, files touched, any risks"` via Bash
 - Do not close the issue — closing requires addressing *all* review findings and @staff-engineer sign-off.
 - If you discover additional work needed, add a comment describing it and stop — do not expand scope:
-  `bmo issue comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Discovered: description"` via Bash
+  `bmo comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Discovered: description"` via Bash
 - All bmo commands are Bash commands run via the Bash tool
 ```
 
@@ -220,11 +220,11 @@ BMO Issue: {ISSUE-ID} — {title}
 Description: {full issue description from bmo}
 
 - Run `bmo agent-init` via Bash, then check docs/tdd/, docs/ux/, and docs/spec/ for expected behavior
-- Run `bmo issue comment list {ISSUE-ID}` via Bash — the @senior-engineer completion comment is your primary context
+- Run `bmo comment list {ISSUE-ID}` via Bash — the @senior-engineer completion comment is your primary context
 - Do not claim or close the issue — QA communicates via comments only
 - Write tests that verify acceptance criteria from the issue description and specs
 - Run existing test suites to check for regressions
-- When done, add a comment: `bmo issue comment add {ISSUE-ID} --author "qa-engineer" --body "QA: summary of tests, coverage, pass/fail results"` via Bash
+- When done, add a comment: `bmo comment add {ISSUE-ID} --author "qa-engineer" --body "QA: summary of tests, coverage, pass/fail results"` via Bash
 - Report bugs as comments on the relevant issue, not as new issues
 - All bmo commands are Bash commands run via the Bash tool
 ```

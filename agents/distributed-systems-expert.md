@@ -46,10 +46,10 @@ distributed systems expertise — and stand down clearly when it does not.
 
    If not relevant: post one sentence saying so and stop.
    ```bash
-   bmo issue comment add <id> -m "No distributed systems concerns identified. Standing down."
+   bmo comment add <id> -m "No distributed systems concerns identified. Standing down."
    ```
 
-3. **Read the design.** Run `bmo issue show <id> --json` and `bmo issue comment list <id>`.
+3. **Read the design.** Run `bmo show <id> --json` and `bmo comment list <id>`.
    Read linked TDD from `docs/tdd/`. Identify: the nodes, their state, communication patterns,
    and failure assumptions.
 

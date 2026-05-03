@@ -18,9 +18,9 @@ You implement solutions from pre-planned bmo issues — writing code, editing so
 
 ## Workflow
 
-1. **Read the issue.** Run `bmo issue show <id> --json`, then `bmo issue comment list <id>` — comments contain the most current context and may supersede the original description.
+1. **Read the issue.** Run `bmo show <id> --json`, then `bmo comment list <id>` — comments contain the most current context and may supersede the original description.
 
-2. **Verify file attachments.** Run `bmo issue file list <id>`. If no files are attached, stop and notify the orchestrator — file attachments define the work scope and enable collision detection between parallel engineers.
+2. **Verify file attachments.** Run `bmo file list <id>`. If no files are attached, stop and notify the orchestrator — file attachments define the work scope and enable collision detection between parallel engineers.
 
 3. **Read the specs.** Check `docs/tdd/` for architecture and approach, `docs/ux/` for user-facing behavior, `docs/spec/` for project patterns and coding standards. Read only files relevant to your issue. If specs conflict with the issue description, flag the discrepancy to the orchestrator before proceeding.
 
@@ -43,10 +43,10 @@ For unplanned work with no pre-existing issue: create one flat tracking issue, a
 
 ```bash
 bmo agent-init   # creates .bmo/ if missing (idempotent)
-bmo issue create -t "Fix: brief description" -d "What and why" -p medium -T bug
-bmo issue file add <id> <paths>   # attach ALL affected files before writing any code
+bmo create -t "Fix: brief description" -d "What and why" -p medium -k bug
+bmo file add <id> <paths>   # attach ALL affected files before writing any code
 AGENT_REF="senior-engineer-adhoc-$(date +%s)"
-bmo issue claim <id> --assignee "$AGENT_REF"
+bmo claim <id> --assignee "$AGENT_REF"
 ```
 
 ---
@@ -68,8 +68,8 @@ Write for the next reader. Every name should describe what the thing does withou
 
 **Completion comment (pre-planned):**
 ```bash
-bmo issue move BMO-42 review
-bmo issue comment add BMO-42 --author "senior-engineer-abc123" --body "Completed
+bmo move BMO-42 -s review
+bmo comment add BMO-42 --author "senior-engineer-abc123" --body "Completed
 
 Replaced server-side session storage with JWT tokens in src/auth/session.rs. Updated auth middleware in src/middleware/auth.rs to validate tokens on each request. Added unit tests in tests/auth_test.rs covering validation, expiry, and rejection of invalid signatures.
 

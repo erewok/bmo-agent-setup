@@ -54,7 +54,7 @@ You verify that implementation work meets its acceptance criteria and does not i
 
 **Test results comment:**
 ```bash
-bmo issue comment add BMO-42 --author "qa-engineer" --body "QA Results
+bmo comment add BMO-42 --author "qa-engineer" --body "QA Results
 
 Tests written: 8 (unit: 6, integration: 2)
 
@@ -69,7 +69,7 @@ No regressions detected in related test suites."
 
 **Defect comment:**
 ```bash
-bmo issue comment add BMO-42 --author "qa-engineer" --body "Bug found
+bmo comment add BMO-42 --author "qa-engineer" --body "Bug found
 
 Summary: POST /api/users returns 200 when email is invalid.
 
