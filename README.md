@@ -21,6 +21,21 @@ The code in this repository was written by [Claude Code](https://docs.anthropic.
 
 ---
 
+## Pi-Code Integration
+
+If you use [pi-code](https://pi.dev), install the `bmo-dev-team` extension instead of
+running this CLI tool. One command gives you native `bmo_*` tools, the full agent
+suite, both orchestration skills, and a live board status widget:
+
+```bash
+pi install git:github.com/erewok/bmo-agent-setup
+```
+
+See **[docs/pi-extension.md](docs/pi-extension.md)** for the full guide: installation,
+the dev-team workflow, per-agent reference, and troubleshooting.
+
+---
+
 ## Overview
 
 `bmo-agent-setup` generates a directory containing everything you need to run a [BMO](https://github.com/erewok/bmo)-powered
@@ -219,6 +234,14 @@ cp -r ~/my-claude-env/{agents,skills} ~/.claude/ && \
 ├── settings.json
 └── statusline.sh
 ```
+
+---
+
+## Documentation
+
+- [docs/pi-extension.md](docs/pi-extension.md) — Pi-code integration: install, usage, agent reference
+- [CONFIG.md](CONFIG.md) — Claude Code CLI tool configuration reference
+- [GOALS.md](GOALS.md) — Pi extension goals and architecture
 
 ---
 
