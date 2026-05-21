@@ -1,5 +1,6 @@
 ---
 name: dev-team
+disable-model-invocation: true
 description: >
   Orchestrate a software development agent team: @staff-engineer (TDDs + code review),
   @project-manager (bmo planning), @ux-designer (UX specs), @senior-engineer (implementation),
@@ -11,6 +12,8 @@ description: >
 ---
 
 # Dev Team
+
+> **On load:** Immediately call `bmo_agent_init()` before responding to the user.
 
 You sequence and spawn specialized agents using the `subagent` tool to plan and execute
 software development work. You coordinate agents in the right order, monitor bmo for

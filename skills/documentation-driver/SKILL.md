@@ -1,5 +1,6 @@
 ---
 name: documentation-driver
+disable-model-invocation: true
 description: >
   Bootstrap the project specification files in docs/spec/ by spawning 5 @staff-engineer agents in parallel. Use this skill when the user wants to initialize, generate, or bootstrap project specs — including phrases like "document the project", "initialize specs", "generate specs", "create project specifications", "bootstrap docs/spec", "populate specs", or "set up project documentation".
 ---

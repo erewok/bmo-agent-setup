@@ -1,5 +1,6 @@
 ---
 name: documentation-driver
+disable-model-invocation: true
 description: >
   Bootstrap project specification files in docs/spec/ by spawning staff-engineer
   agents in parallel. Use when the user wants to initialize, generate, or bootstrap
