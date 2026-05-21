@@ -15,8 +15,8 @@ Installing the extension gives you:
 | **8 specialist agents** | `staff-engineer`, `project-manager`, `senior-engineer`, `qa-engineer`, `ux-designer`, `code-quality`, `documentation-writer`, `distributed-systems-expert` |
 
 The `bmo_*` tools, board context injection, status widget, and `/bmo-*` slash commands
-come from the [pi-bmo](https://github.com/erewok/pi-bmo) extension, which must be
-installed separately.
+come from the [pi-bmo](https://github.com/erewok/pi-bmo) extension, **which must be
+installed separately**.
 
 ---
 

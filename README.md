@@ -1,6 +1,6 @@
 # bmo-agent-setup
 
-A CLI tool to configure a Claude Code environment with [BMO](https://github.com/erewok/bmo).
+A CLI tool to configure Claude Code or pi-code with [BMO](https://github.com/erewok/bmo).
 
 ---
 
@@ -15,7 +15,7 @@ This repository includes code and Markdown content adapted from
 
 Substantial credit for the agent, skill, and workflow design belongs to the
 `dotfiles.vorpal` maintainers and contributors. This repository contains
-modifications and simplifications focused on a standalone Claude Code setup tool.
+modifications and simplifications focused on a standalone Claude Code setup tool and a pi-code extension.
 
 The code in this repository was written by [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
 
@@ -23,11 +23,14 @@ The code in this repository was written by [Claude Code](https://docs.anthropic.
 
 ## Pi-Code Integration
 
-If you use [pi-code](https://pi.dev), install the `bmo-dev-team` extension instead of
-running this CLI tool. One command gives you native `bmo_*` tools, the full agent
-suite, both orchestration skills, and a live board status widget:
+If you use [pi-code](https://pi.dev), you can install the `pi-bmo-agents` extension instead of
+running this CLI tool.
+
+
+The full agentsuite, both orchestration skills, and a live board status widget:
 
 ```bash
+pi install git:github.com/erewok/pi-bmo
 pi install git:github.com/erewok/bmo-agent-setup
 ```
 
@@ -38,18 +41,14 @@ the dev-team workflow, per-agent reference, and troubleshooting.
 
 ## Overview
 
-`bmo-agent-setup` generates a directory containing everything you need to run a [BMO](https://github.com/erewok/bmo)-powered
-Claude Code agent team:
+`bmo-agent-setup` contains a [BMO](https://github.com/erewok/bmo)-powered agent team for claude-code or pi-code:
 
 - **agents/** — Five agent definition files (Markdown prompts consumed by Claude Code)
 - **skills/** — Two orchestration skills (`dev-team` and `documentation-driver`)
 - **settings.json** — Claude Code configuration
 - **statusline.sh** — Status bar script for Claude Code
 
-After the tool runs it prints step-by-step instructions showing where to place each generated
-file so that Claude Code picks them up automatically.
-
-Future support for GitHub Copilot CLI as an alternative target is planned.
+If you run the CLI, it dumps all related files into a local ./claude-code-env dir and then prints step-by-step instructions showing where to place each generated file so that Claude Code picks them up automatically.
 
 The agent team is configured to use **[`bmo`](https://github.com/erewok/bmo)** for issue tracking.
 
