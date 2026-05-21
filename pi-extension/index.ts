@@ -1,5 +1,5 @@
 /**
- * bmo-dev-team pi extension
+ * pi-bmo-agents extension
  *
  * Provides the bmo-aware dev-team agent suite for pi-code:
  *   - `subagent` tool for spawning staff-engineer, project-manager,
@@ -7,9 +7,8 @@
  *     documentation-writer agents in isolated pi subprocesses
  *   - Skills: dev-team orchestration workflow, documentation-driver
  *
- * The bmo_* tools (bmo_create, bmo_show, bmo_comment, etc.) are provided
- * by the pi-bmo extension, which this package bundles as a dependency.
- * You do not need to install pi-bmo separately.
+ * Requires pi-bmo to be installed separately for the bmo_* tools:
+ *   pi install git:github.com/erewok/pi-bmo
  *
  * Install:
  *   pi install git:github.com/erewok/bmo-agent-setup
@@ -17,8 +16,8 @@
  * Or for local dev, add both to ~/.pi/agent/settings.json:
  *   {
  *     "extensions": [
- *       "/path/to/bmo/pi-extension",
- *       "/path/to/bmo-agent-setup/pi-extension"
+ *       "/path/to/pi-bmo",
+ *       "/path/to/bmo-agent-setup"
  *     ]
  *   }
  */
