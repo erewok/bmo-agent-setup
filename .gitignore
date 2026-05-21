@@ -1,5 +1,6 @@
 .bmo
 /target
+pi-extension/node_modules
 .claude/
 claude-code-env/
 my-config.toml
