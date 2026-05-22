@@ -10,8 +10,8 @@ Installing the extension gives you:
 | Feature | Description |
 |---------|-------------|
 | **`subagent` tool** | Spawn any dev-team agent in an isolated pi subprocess with a single tool call |
-| **`dev-team` skill** | `/skill:dev-team` — full orchestration: design → plan → implement → review → QA |
-| **`documentation-driver` skill** | `/skill:documentation-driver` — generate all five `docs/spec/` files in parallel |
+| **`pi-bmo-dev-team` skill** | `/skill:pi-bmo-dev-team` — full orchestration: design → plan → implement → review → QA |
+| **`pi-bmo-documentation-driver` skill** | `/skill:pi-bmo-documentation-driver` — generate all five `docs/spec/` files in parallel |
 | **8 specialist agents** | `staff-engineer`, `project-manager`, `senior-engineer`, `qa-engineer`, `ux-designer`, `code-quality`, `documentation-writer`, `distributed-systems-expert` |
 
 The `bmo_*` tools, board context injection, status widget, and `/bmo-*` slash commands
@@ -68,8 +68,8 @@ remove any that conflict before reloading — pi keeps the first copy found and 
 global directory is checked before extension-contributed paths:
 
 ```bash
-rm -rf ~/.pi/agent/skills/dev-team
-rm -rf ~/.pi/agent/skills/documentation-driver
+rm -rf ~/.pi/agent/skills/pi-bmo-dev-team
+rm -rf ~/.pi/agent/skills/pi-bmo-documentation-driver
 ```
 
 ---
@@ -79,7 +79,7 @@ rm -rf ~/.pi/agent/skills/documentation-driver
 Trigger the dev-team with natural language or the explicit skill command:
 
 ```
-/skill:dev-team add Redis caching to the session store
+/skill:pi-bmo-dev-team add Redis caching to the session store
 ```
 
 Or just describe the work — the skill's trigger phrases are broad:
@@ -217,7 +217,7 @@ systems dimension.
 Generate all five `docs/spec/` files in parallel for an existing codebase:
 
 ```
-/skill:documentation-driver
+/skill:pi-bmo-documentation-driver
 ```
 
 The skill checks for existing files first and asks whether to overwrite or skip them.

@@ -11,8 +11,8 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import * as os from "node:os";
 import { fileURLToPath } from "node:url";
+import { getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
 
 export type AgentScope = "bundled" | "user" | "project" | "all";
 
@@ -34,52 +34,17 @@ function parseAgentFile(filePath: string): Omit<AgentConfig, "source"> | null {
     return null;
   }
 
-  const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
-  if (!fmMatch) {
-    // No frontmatter — use filename as name, whole file as prompt
-    const name = path.basename(filePath, ".md");
-    return { name, description: "", systemPrompt: content.trim(), filePath };
-  }
+  const { frontmatter: fm, body } = parseFrontmatter<Record<string, string>>(content);
 
-  const frontmatterStr = fmMatch[1];
-  const body = fmMatch[2].trim();
-
-  // Simple YAML key:value parser (handles quoted and unquoted values, multi-line with >)
-  const fm: Record<string, string> = {};
-  const lines = frontmatterStr.split(/\r?\n/);
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    const kv = line.match(/^(\w[\w-]*):\s*(.*)/);
-    if (kv) {
-      const key = kv[1];
-      let val = kv[2].trim();
-      // Block scalar >
-      if (val === ">") {
-        const parts: string[] = [];
-        i++;
-        while (i < lines.length && (lines[i].startsWith("  ") || lines[i] === "")) {
-          parts.push(lines[i].replace(/^  /, ""));
-          i++;
-        }
-        val = parts.join(" ").trim();
-        continue;
-      }
-      // Quoted
-      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-        val = val.slice(1, -1);
-      }
-      fm[key] = val;
-    }
-    i++;
-  }
-
+  // If no frontmatter, fall back to filename as name
   const name = fm.name ?? path.basename(filePath, ".md");
+  if (!name) return null;
+
   const description = fm.description ?? "";
   const tools = fm.tools ? fm.tools.split(/[,\s]+/).filter(Boolean) : undefined;
   const model = fm.model;
 
-  return { name, description, systemPrompt: body, tools, model, filePath };
+  return { name, description, systemPrompt: body.trim(), tools, model, filePath };
 }
 
 function loadAgentsFromDir(dir: string, source: AgentConfig["source"]): AgentConfig[] {
@@ -125,7 +90,7 @@ export interface AgentDiscovery {
  */
 export function discoverAgents(cwd: string, scope: AgentScope = "all"): AgentDiscovery {
   const bundledDir = getBundledAgentsDir();
-  const userDir = path.join(os.homedir(), ".pi", "agent", "agents");
+  const userDir = path.join(getAgentDir(), "agents");
   const projectDir = path.join(cwd, ".pi", "agents");
 
   const all: AgentConfig[] = [];

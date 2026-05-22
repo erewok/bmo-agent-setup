@@ -1,5 +1,5 @@
 ---
-name: dev-team
+name: pi-bmo-dev-team
 disable-model-invocation: true
 description: >
   Orchestrate a software development agent team: @staff-engineer (TDDs + code review),

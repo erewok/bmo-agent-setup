@@ -1,5 +1,5 @@
 ---
-name: documentation-driver
+name: pi-bmo-documentation-driver
 disable-model-invocation: true
 description: >
   Bootstrap project specification files in docs/spec/ by spawning staff-engineer
