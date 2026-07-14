@@ -1,0 +1,82 @@
+# HARDENED - reads are free, writes/edits are scoped to the current
+# directory, everything else asks first or is denied outright. A safe
+# default posture for unfamiliar codebases or higher-stakes environments.
+
+[core]
+thinking-enabled = true
+fast-mode = false
+
+[statusline]
+enabled = true
+padding = 2
+
+[permissions]
+# Default permission mode: "acceptEdits", "auto", "bypassPermissions", "default",
+# "delegate" (experimental agent teams), "dontAsk", "plan"
+default-mode = "default"
+
+# Reads are unrestricted; writes/edits are allowed only inside the
+# current working directory.
+allow = [
+    "Read(*)",
+    "Write(./**)",
+    "Edit(./**)",
+]
+
+# Anything that reaches outside the current directory, or runs a shell
+# command, requires explicit approval.
+ask = [
+    "Write",
+    "Edit",
+    "Bash",
+]
+
+# Explicitly deny dangerous operations regardless of the rules above
+deny = [
+    "Write(/etc/**)",
+    "Write(/usr/**)",
+    "Write(/bin/**)",
+    "Write(/sbin/**)",
+    "Write(~/.ssh/**)",
+    "Write(~/.aws/**)",
+    "Bash(rm -rf *)",
+    "Bash(sudo *)",
+]
+
+# Never allow bypassing permission prompts in this environment
+disable-bypass-permissions-mode = "disable"
+
+[sandbox]
+enabled = true
+auto-allow-bash = false
+allow-unsandboxed-commands = false
+
+# Hard-fail rather than silently running unsandboxed if sandboxing is unavailable
+fail-if-unavailable = true
+
+[sandbox.network]
+# Only allow essential domains
+allowed-domains = [
+    "api.anthropic.com",
+]
+
+allow-local-binding = false
+
+[sandbox.credentials]
+# Hide credential files and secret env vars from sandboxed commands
+files = [
+    "~/.ssh/id_ed25519",
+    "~/.ssh/id_rsa",
+    "~/.aws/credentials",
+]
+
+env-vars = [
+    "ANTHROPIC_API_KEY",
+    "AWS_SECRET_ACCESS_KEY",
+    "GITHUB_TOKEN",
+]
+
+[mcp]
+enable-all-project-servers = false
+# Only explicitly approved servers
+enabled-servers = []

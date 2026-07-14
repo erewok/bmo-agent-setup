@@ -1,0 +1,216 @@
+# DEFAULT - a balanced mix of bmo-config.yolo-mode.toml (never asks) and
+# bmo-config.hardened.toml (sandboxed, scoped to the current directory).
+# Reads, writes/edits inside the current directory, and a couple of
+# read-only bash/jq commands are allowed outright; writes/edits elsewhere
+# and other shell commands ask first; a few clearly dangerous paths are
+# denied; the sandbox is off for lower friction.
+#
+# This file is compiled into the binary and used automatically by
+# `cargo run` (or the built binary) whenever no `--config` flag is given --
+# see the top of src/main.rs. Editing it changes the tool's out-of-the-box
+# behavior, not just a sample. If you want a durable personal config
+# instead, copy it to my-config.toml (gitignored) and pass
+# `--config my-config.toml`.
+#
+# This file also documents every option this tool understands, commented
+# out where not part of the default posture -- treat it as the reference
+# alongside CONFIG.md.
+#
+# Schema reference: https://code.claude.com/docs/en/settings
+# Permission rule syntax: "ToolName" or "ToolName(pattern)" -- no colons.
+# Examples: "Bash", "Bash(git commit *)", "Read(src/**)", "Write(/etc/**)"
+
+[core]
+# Model to use (optional)
+# model = "claude-sonnet-5"
+
+# Output style (optional)
+# output-style = "concise"
+
+# Enable always-thinking mode (default: true when using config)
+thinking-enabled = true
+
+# Enable fast mode: uses Opus for faster output at higher per-token cost;
+# requires extra usage enabled (optional)
+# fast-mode = false
+
+# API key helper command (optional)
+# api-key-helper = "op read op://Private/anthropic/api-key"
+
+# Cleanup period in days for sessions, worktrees, tasks, shell snapshots (optional, min: 1)
+# cleanup-period-days = 7
+
+# Named subagent to run the main thread as (optional)
+# agent = "my-custom-agent"
+
+# Default shell: "bash" or "powershell" (optional)
+# default-shell = "bash"
+
+# Editor mode: "normal" or "vim" (optional)
+# editor-mode = "normal"
+
+# Effort level: "low", "medium", "high", or "xhigh" (optional)
+# effort-level = "high"
+
+# Restrict the selectable model list (optional)
+# available-models = ["claude-opus-4-8", "claude-sonnet-5"]
+
+# Fallback model chain, max 3 entries (optional)
+# fallback-model = ["claude-sonnet-5"]
+
+# Path to a script that generates @ file-picker suggestions (optional)
+# file-suggestion-command = "/custom/path/to/file-suggestion.sh"
+
+# Environment variables (optional)
+# [core.env]
+# CUSTOM_VAR = "value"
+
+[statusline]
+# Enable statusline
+enabled = true
+
+# Custom command path (optional, defaults to $HOME/.claude/statusline.sh)
+# command = "/custom/path/to/statusline.sh"
+
+# Padding (optional)
+padding = 2
+
+# Re-run the status line command every N seconds, for time-based data (optional)
+# refresh-interval = 5
+
+# Suppress the built-in vim mode indicator if your script renders its own (optional)
+# hide-vim-mode-indicator = false
+
+[permissions]
+# Default permission mode: "acceptEdits", "auto", "bypassPermissions", "default",
+# "delegate" (experimental agent teams), "dontAsk", "plan"
+default-mode = "default"
+
+# Permission rules - "ToolName" or "ToolName(pattern)", tool names are case-sensitive
+# Writes/edits inside the current directory are allowed outright; writes
+# elsewhere still ask (see below).
+allow = [
+    "Read(*)",
+    "Write(./**)",
+    "Edit(./**)",
+    "Bash(bmo *)",
+    "Bash(jq *)",
+]
+
+ask = [
+    "Write",
+    "Edit",
+    "Bash",
+]
+
+deny = [
+    "Write(/etc/**)",
+    "Write(/usr/**)",
+]
+
+# Additional directories accessible to agent (optional)
+# additional-directories = ["/path/to/extra/dir"]
+
+# Set to "disable" to prevent bypassPermissions mode from being used (optional)
+# disable-bypass-permissions-mode = "disable"
+
+# Set to "disable" to prevent auto mode from being activated (optional)
+# disable-auto-mode = "disable"
+
+[sandbox]
+# Enable sandbox mode
+enabled = false
+
+# Auto-allow bash if sandboxed
+# auto-allow-bash = true
+
+# Allow unsandboxed commands
+# allow-unsandboxed-commands = false
+
+# Commands excluded from sandbox (optional)
+# excluded-commands = ["git", "cargo"]
+
+# macOS only; required for some Go-based CLIs (gh, gcloud, terraform) behind
+# a MITM proxy when using http-proxy-port with a custom CA (optional)
+# enable-weaker-network-isolation = false
+
+# For unprivileged docker environments where --proc mounting fails; weakens
+# the sandbox significantly (optional)
+# enable-weaker-nested-sandbox = false
+
+# Hard-fail startup if sandbox dependencies are missing, instead of warning
+# and skipping the sandbox (optional)
+# fail-if-unavailable = false
+
+# macOS only; allow sandboxed commands to send Apple Events (optional)
+# allow-apple-events = false
+
+[sandbox.network]
+# Allowed network domains
+allowed-domains = [
+    "github.com",
+    "api.anthropic.com",
+]
+
+# Blocked domains, take precedence even over a wildcard allow (optional)
+# denied-domains = ["*.internal.example.com"]
+
+# Allow Unix sockets (optional)
+# allow-unix-sockets = ["/var/run/docker.sock"]
+
+# Allow local port binding
+# allow-local-binding = true
+
+# Custom proxy ports, instead of auto-starting a proxy server (optional)
+# http-proxy-port = 8080
+# socks-proxy-port = 1080
+
+[sandbox.credentials]
+# Hide these credential files from sandboxed commands (optional)
+# files = ["~/.aws/credentials", "~/.ssh/id_ed25519"]
+
+# Unset these secret env vars for sandboxed commands (optional)
+# env-vars = ["AWS_SECRET_ACCESS_KEY", "ANTHROPIC_API_KEY"]
+
+[attribution]
+# Git commit template (optional)
+# commit = "Co-authored-by: Claude <claude@anthropic.com>"
+
+# Pull request template (optional)
+# pr = "Assisted by Claude Code"
+
+# DEPRECATED - use commit/pr above instead
+# include-co-authored-by = true
+
+[mcp]
+# Enable all project MCP servers
+enable-all-project-servers = false
+
+# Specifically enabled MCP servers
+enabled-servers = [
+    "filesystem",
+]
+
+# Specifically disabled MCP servers
+# disabled-servers = ["some-server"]
+
+# Example hook configuration (optional). Event names come from Claude Code's
+# hook lifecycle (PreToolUse, PostToolUse, Stop, SessionStart, ...); see
+# https://code.claude.com/docs/en/hooks for the full list and matcher syntax.
+# The matcher scopes by tool name, not by file glob -- to run formatters only
+# on specific file types, have the command inspect the JSON on stdin.
+# [[hooks.PostToolUse]]
+# matcher = "Edit|Write"
+# command = "rustfmt"
+# type = "command"
+
+# Escape hatch for any settings.json key not covered by a section above.
+# Keys here are the literal camelCase settings.json key names (not
+# kebab-case) and pass straight through, so new Claude Code settings can be
+# used without waiting on a code change here. Don't repeat a key that
+# already has a dedicated section (core, statusline, permissions, sandbox,
+# attribution, mcp) above.
+# [settings]
+# respectGitignore = true
+# autoCompactEnabled = true
+# theme = "dark"

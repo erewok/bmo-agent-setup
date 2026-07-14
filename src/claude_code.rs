@@ -33,6 +33,8 @@ pub struct Permissions {
     pub default_mode: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disable_bypass_permissions_mode: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disable_auto_mode: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -40,12 +42,47 @@ pub struct Permissions {
 pub struct SandboxNetwork {
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub allowed_domains: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub denied_domains: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_all_unix_sockets: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_unix_sockets: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_local_binding: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_managed_domains_only: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_mach_lookup: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub http_proxy_port: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub socks_proxy_port: Option<u16>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CredentialFile {
+    pub path: String,
+    /// Only "deny" is supported by Claude Code today.
+    pub mode: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CredentialEnvVar {
+    pub name: String,
+    /// Only "deny" is supported by Claude Code today.
+    pub mode: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct SandboxCredentials {
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub files: Vec<CredentialFile>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub env_vars: Vec<CredentialEnvVar>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -61,6 +98,16 @@ pub struct Sandbox {
     pub excluded_commands: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub network: Option<SandboxNetwork>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enable_weaker_network_isolation: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enable_weaker_nested_sandbox: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fail_if_unavailable: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_apple_events: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub credentials: Option<SandboxCredentials>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -83,12 +130,26 @@ pub struct McpServerRule {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileSuggestion {
+    #[serde(rename = "type")]
+    pub suggestion_type: String,
+    pub command: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatusLine {
     #[serde(rename = "type")]
     pub status_type: String,
     pub command: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub padding: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "refreshInterval")]
+    pub refresh_interval: Option<u32>,
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        rename = "hideVimModeIndicator"
+    )]
+    pub hide_vim_mode_indicator: Option<bool>,
 }
 
 // Main ClaudeCode configuration struct
@@ -107,6 +168,18 @@ pub struct ClaudeCode {
     cleanup_period_days: Option<u32>,
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     env: BTreeMap<String, String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    agent: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    default_shell: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    editor_mode: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    effort_level: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    available_models: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    fallback_model: Vec<String>,
 
     // Authentication
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -148,13 +221,21 @@ pub struct ClaudeCode {
     #[serde(skip_serializing_if = "Option::is_none")]
     status_line: Option<StatusLine>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    file_suggestion: Option<String>,
+    file_suggestion: Option<FileSuggestion>,
     #[serde(skip_serializing_if = "BTreeMap::is_empty", default)]
     enabled_plugins: BTreeMap<String, bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     always_thinking_enabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     fast_mode: Option<bool>,
+
+    /// Escape hatch for any settings.json key not yet modeled above.
+    /// The root settings object allows additional properties, so new
+    /// top-level Claude Code settings can be passed straight through here
+    /// (e.g. via the `[settings]` table in a TOML config) without requiring
+    /// a Rust code change first. Keys here must not duplicate a named field.
+    #[serde(flatten)]
+    extra: BTreeMap<String, serde_json::Value>,
 }
 
 impl ClaudeCode {
@@ -166,6 +247,12 @@ impl ClaudeCode {
             api_key_helper: None,
             cleanup_period_days: None,
             env: BTreeMap::new(),
+            agent: None,
+            default_shell: None,
+            editor_mode: None,
+            effort_level: None,
+            available_models: Vec::new(),
+            fallback_model: Vec::new(),
 
             // Authentication
             force_login_method: None,
@@ -196,6 +283,7 @@ impl ClaudeCode {
             enabled_plugins: BTreeMap::new(),
             always_thinking_enabled: None,
             fast_mode: None,
+            extra: BTreeMap::new(),
         }
     }
 
@@ -234,6 +322,53 @@ impl ClaudeCode {
     #[allow(dead_code)]
     pub fn with_env_vars(mut self, vars: BTreeMap<String, String>) -> Self {
         self.env = vars;
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_agent(mut self, agent: &str) -> Self {
+        self.agent = Some(agent.to_string());
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_default_shell(mut self, shell: &str) -> Self {
+        self.default_shell = Some(shell.to_string());
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_editor_mode(mut self, mode: &str) -> Self {
+        self.editor_mode = Some(mode.to_string());
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_effort_level(mut self, level: &str) -> Self {
+        self.effort_level = Some(level.to_string());
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_available_models(mut self, models: Vec<String>) -> Self {
+        self.available_models = models;
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_fallback_model(mut self, models: Vec<String>) -> Self {
+        self.fallback_model = models;
+        self
+    }
+
+    /// Set an arbitrary top-level settings.json key not otherwise modeled by
+    /// this struct. Panics-free: silently overwrites if called twice for the
+    /// same key. Do not use this for keys that already have a dedicated
+    /// field/method above (e.g. "model", "sandbox") -- that produces a
+    /// duplicate-key serialization error.
+    #[allow(dead_code)]
+    pub fn with_extra_setting(mut self, key: &str, value: serde_json::Value) -> Self {
+        self.extra.insert(key.to_string(), value);
         self
     }
 
@@ -307,6 +442,14 @@ impl ClaudeCode {
         self
     }
 
+    #[allow(dead_code)]
+    pub fn with_permission_disable_auto_mode(mut self, value: &str) -> Self {
+        let mut perms = self.permissions.unwrap_or_default();
+        perms.disable_auto_mode = Some(value.to_string());
+        self.permissions = Some(perms);
+        self
+    }
+
     // Sandbox builder methods
 
     #[allow(dead_code)]
@@ -373,6 +516,119 @@ impl ClaudeCode {
         let mut network = sandbox.network.unwrap_or_default();
         network.allow_local_binding = Some(allow);
         sandbox.network = Some(network);
+        self.sandbox = Some(sandbox);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_sandbox_network_denied_domains(mut self, domains: Vec<String>) -> Self {
+        let mut sandbox = self.sandbox.unwrap_or_default();
+        let mut network = sandbox.network.unwrap_or_default();
+        network.denied_domains = domains;
+        sandbox.network = Some(network);
+        self.sandbox = Some(sandbox);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_sandbox_network_allow_all_unix_sockets(mut self, allow: bool) -> Self {
+        let mut sandbox = self.sandbox.unwrap_or_default();
+        let mut network = sandbox.network.unwrap_or_default();
+        network.allow_all_unix_sockets = Some(allow);
+        sandbox.network = Some(network);
+        self.sandbox = Some(sandbox);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_sandbox_network_allow_managed_domains_only(mut self, allow: bool) -> Self {
+        let mut sandbox = self.sandbox.unwrap_or_default();
+        let mut network = sandbox.network.unwrap_or_default();
+        network.allow_managed_domains_only = Some(allow);
+        sandbox.network = Some(network);
+        self.sandbox = Some(sandbox);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_sandbox_network_allow_mach_lookup(mut self, allow: bool) -> Self {
+        let mut sandbox = self.sandbox.unwrap_or_default();
+        let mut network = sandbox.network.unwrap_or_default();
+        network.allow_mach_lookup = Some(allow);
+        sandbox.network = Some(network);
+        self.sandbox = Some(sandbox);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_sandbox_network_proxy_ports(
+        mut self,
+        http_port: Option<u16>,
+        socks_port: Option<u16>,
+    ) -> Self {
+        let mut sandbox = self.sandbox.unwrap_or_default();
+        let mut network = sandbox.network.unwrap_or_default();
+        network.http_proxy_port = http_port;
+        network.socks_proxy_port = socks_port;
+        sandbox.network = Some(network);
+        self.sandbox = Some(sandbox);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_sandbox_enable_weaker_network_isolation(mut self, enabled: bool) -> Self {
+        let mut sandbox = self.sandbox.unwrap_or_default();
+        sandbox.enable_weaker_network_isolation = Some(enabled);
+        self.sandbox = Some(sandbox);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_sandbox_enable_weaker_nested_sandbox(mut self, enabled: bool) -> Self {
+        let mut sandbox = self.sandbox.unwrap_or_default();
+        sandbox.enable_weaker_nested_sandbox = Some(enabled);
+        self.sandbox = Some(sandbox);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_sandbox_fail_if_unavailable(mut self, enabled: bool) -> Self {
+        let mut sandbox = self.sandbox.unwrap_or_default();
+        sandbox.fail_if_unavailable = Some(enabled);
+        self.sandbox = Some(sandbox);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_sandbox_allow_apple_events(mut self, enabled: bool) -> Self {
+        let mut sandbox = self.sandbox.unwrap_or_default();
+        sandbox.allow_apple_events = Some(enabled);
+        self.sandbox = Some(sandbox);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_sandbox_credential_file(mut self, path: &str) -> Self {
+        let mut sandbox = self.sandbox.unwrap_or_default();
+        let mut creds = sandbox.credentials.unwrap_or_default();
+        creds.files.push(CredentialFile {
+            path: path.to_string(),
+            mode: "deny".to_string(),
+        });
+        sandbox.credentials = Some(creds);
+        self.sandbox = Some(sandbox);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_sandbox_credential_env_var(mut self, name: &str) -> Self {
+        let mut sandbox = self.sandbox.unwrap_or_default();
+        let mut creds = sandbox.credentials.unwrap_or_default();
+        creds.env_vars.push(CredentialEnvVar {
+            name: name.to_string(),
+            mode: "deny".to_string(),
+        });
+        sandbox.credentials = Some(creds);
         self.sandbox = Some(sandbox);
         self
     }
@@ -482,6 +738,8 @@ impl ClaudeCode {
             status_type: "command".to_string(),
             command: command.to_string(),
             padding: None,
+            refresh_interval: None,
+            hide_vim_mode_indicator: None,
         });
         self
     }
@@ -495,8 +753,33 @@ impl ClaudeCode {
     }
 
     #[allow(dead_code)]
+    pub fn with_status_line_refresh_interval(mut self, seconds: u32) -> Self {
+        if let Some(ref mut sl) = self.status_line {
+            sl.refresh_interval = Some(seconds);
+        }
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_status_line_hide_vim_mode_indicator(mut self, hide: bool) -> Self {
+        if let Some(ref mut sl) = self.status_line {
+            sl.hide_vim_mode_indicator = Some(hide);
+        }
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn without_status_line(mut self) -> Self {
+        self.status_line = None;
+        self
+    }
+
+    #[allow(dead_code)]
     pub fn with_file_suggestion(mut self, command: &str) -> Self {
-        self.file_suggestion = Some(command.to_string());
+        self.file_suggestion = Some(FileSuggestion {
+            suggestion_type: "command".to_string(),
+            command: command.to_string(),
+        });
         self
     }
 

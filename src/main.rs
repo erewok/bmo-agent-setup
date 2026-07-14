@@ -6,6 +6,12 @@ use std::fs;
 use std::path::Path;
 use tracing::{debug, info};
 
+/// Built-in default configuration, used automatically when no `--config`
+/// flag is given. See bmo-config.default.toml for the documented source;
+/// bmo-config.yolo-mode.toml and bmo-config.hardened.toml are alternate
+/// presets a user can opt into with `--config`.
+const DEFAULT_CONFIG_TOML: &str = include_str!("../bmo-config.default.toml");
+
 /// Setup Claude Code environment with agents, skills, and configuration
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -14,11 +20,12 @@ struct Args {
     #[arg(short, long, default_value = "./claude-code-env")]
     output: String,
 
-    /// Path to TOML configuration file
+    /// Path to TOML configuration file (defaults to the built-in
+    /// bmo-config.default.toml if omitted)
     #[arg(short, long)]
     config: Option<String>,
 
-    /// Enable statusline in claude.settings.json (overrides config file)
+    /// Enable statusline in settings.json (overrides config file)
     #[arg(long)]
     with_statusline: Option<bool>,
 
@@ -52,31 +59,43 @@ fn main() -> Result<()> {
     info!("🛠️  Copying skills...");
     copy_skills(&skills_dir)?;
 
-    // Generate claude.settings.json
-    info!("⚙️  Generating claude.settings.json...");
-    generate_settings(output_path, &args)?;
+    let config = load_config(&args)?;
 
-    // Copy statusline script (if enabled via CLI or config)
-    let copy_statusline_script = args.with_statusline.unwrap_or(false)
-        || (args.config.is_some() && has_statusline_in_config(&args)?);
+    // Generate settings.json
+    info!("⚙️  Generating settings.json...");
+    generate_settings(output_path, &args, &config)?;
 
-    if copy_statusline_script {
+    // Copy statusline script if the resolved config (CLI override, else
+    // config file, else built-in default) enables it
+    let statusline_enabled = args
+        .with_statusline
+        .unwrap_or_else(|| config.statusline.as_ref().is_some_and(|s| s.enabled));
+
+    if statusline_enabled {
         info!("📊 Copying statusline script...");
         copy_statusline(output_path)?;
     }
 
     // Print installation instructions
-    print_instructions(output_path, &args, copy_statusline_script)?;
+    print_instructions(output_path, statusline_enabled)?;
 
     Ok(())
 }
 
-fn has_statusline_in_config(args: &Args) -> Result<bool> {
-    if let Some(ref config_path) = args.config {
-        let config = ConfigFile::from_file(config_path)?;
-        Ok(config.statusline.map(|s| s.enabled).unwrap_or(false))
-    } else {
-        Ok(false)
+/// Resolve the configuration to use: an explicit `--config` file, or the
+/// built-in default embedded at compile time from bmo-config.default.toml.
+fn load_config(args: &Args) -> Result<ConfigFile> {
+    match &args.config {
+        Some(path) => {
+            info!("📄 Loading configuration from: {}", path);
+            ConfigFile::from_file(path)
+                .with_context(|| format!("Failed to load config file: {}", path))
+        }
+        None => {
+            info!("📄 Loading built-in default configuration (bmo-config.default.toml)");
+            ConfigFile::from_toml_str(DEFAULT_CONFIG_TOML)
+                .context("Failed to parse the built-in default configuration")
+        }
     }
 }
 
@@ -138,42 +157,27 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<()> {
     Ok(())
 }
 
-fn generate_settings(output_dir: &Path, args: &Args) -> Result<()> {
+fn generate_settings(output_dir: &Path, args: &Args, config: &ConfigFile) -> Result<()> {
     let mut builder = ClaudeCode::new();
+    builder = config.apply_to_builder(builder);
 
-    // Load config file if provided
-    if let Some(ref config_path) = args.config {
-        info!("📄 Loading configuration from: {}", config_path);
-        let config = ConfigFile::from_file(config_path)
-            .with_context(|| format!("Failed to load config file: {}", config_path))?;
-        builder = config.apply_to_builder(builder);
+    // CLI overrides apply on top of whichever config was loaded (explicit
+    // file or built-in default)
+    if let Some(thinking) = args.with_thinking {
+        builder = builder.with_always_thinking_enabled(thinking);
     }
 
-    // CLI overrides
-    // If no config file is provided, apply defaults
-    if args.config.is_none() {
-        // Default: enable thinking
-        builder = builder.with_always_thinking_enabled(args.with_thinking.unwrap_or(true));
-    } else {
-        // With config file: only apply CLI if explicitly set
-        if let Some(thinking) = args.with_thinking {
-            builder = builder.with_always_thinking_enabled(thinking);
+    match args.with_statusline {
+        Some(true) => {
+            let statusline_path = format!("{}/.claude/statusline.sh", std::env::var("HOME")?);
+            builder = builder.with_status_line(&statusline_path);
         }
-    }
-
-    // Statusline CLI override or default behavior
-    let statusline_enabled = if let Some(enabled) = args.with_statusline {
-        enabled
-    } else if args.config.is_none() {
-        false // Default: disabled
-    } else {
-        // Config file handled it, don't override
-        return build_and_write_settings(builder, output_dir);
-    };
-
-    if statusline_enabled {
-        let statusline_path = format!("{}/.claude/statusline.sh", std::env::var("HOME")?);
-        builder = builder.with_status_line(&statusline_path);
+        Some(false) => {
+            builder = builder.without_status_line();
+        }
+        None => {
+            // Leave whatever the config produced
+        }
     }
 
     build_and_write_settings(builder, output_dir)
@@ -206,7 +210,7 @@ fn copy_statusline(output_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-fn print_instructions(output_dir: &Path, _args: &Args, has_statusline: bool) -> Result<()> {
+fn print_instructions(output_dir: &Path, has_statusline: bool) -> Result<()> {
     let abs_path = output_dir
         .canonicalize()
         .unwrap_or(output_dir.to_path_buf());

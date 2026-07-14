@@ -124,7 +124,7 @@ todo → in-progress (senior-engineer claims) → review (senior-engineer when d
 
 ### Quick Start
 
-**Basic setup (no customization):**
+**Basic setup (uses the built-in default posture, no customization):**
 ```bash
 cargo run --release
 ```
@@ -134,9 +134,10 @@ cargo run --release
 cargo run --release -- --with-statusline=true
 ```
 
-**Using a configuration file (recommended for complex setups):**
+**Using one of the other built-in presets:**
 ```bash
-cargo run --release -- --config bmo-config.toml
+cargo run --release -- --config bmo-config.hardened.toml
+cargo run --release -- --config bmo-config.yolo-mode.toml
 ```
 
 See [CONFIG.md](CONFIG.md) for detailed configuration documentation.
@@ -147,17 +148,17 @@ See [CONFIG.md](CONFIG.md) for detailed configuration documentation.
 # Build
 cargo build --release
 
-# Run with defaults
+# Run with the built-in default posture
 cargo run --release
 
 # Run with custom output directory
 cargo run --release -- --output ~/my-claude-env
 
-# Run with configuration file
-cargo run --release -- --config bmo-config.toml
+# Run with one of the other built-in presets
+cargo run --release -- --config bmo-config.hardened.toml
 
 # Run with CLI overrides
-cargo run --release -- --config bmo-config.toml --with-thinking=false
+cargo run --release -- --config bmo-config.hardened.toml --with-thinking=false
 
 # Or with justfile
 just run
@@ -169,19 +170,24 @@ just run ~/my-claude-env
 | Flag | Description | Default |
 |---|---|---|
 | `-o`, `--output <PATH>` | Output directory for the generated environment | `./claude-code-env` |
-| `-c`, `--config <FILE>` | Path to TOML configuration file | None |
-| `--with-statusline <BOOL>` | Enable/disable statusline (overrides config) | `false` (or from config) |
-| `--with-thinking <BOOL>` | Enable/disable always-thinking mode (overrides config) | `true` (or from config) |
+| `-c`, `--config <FILE>` | Path to TOML configuration file | Built-in `bmo-config.default.toml` |
+| `--with-statusline <BOOL>` | Enable/disable statusline (overrides config) | From config |
+| `--with-thinking <BOOL>` | Enable/disable always-thinking mode (overrides config) | From config |
 | `-h`, `--help` | Print help | |
 | `-V`, `--version` | Print version | |
 
 ### Configuration Files
 
-Three example configurations are included:
+Three presets are included — see [CONFIG.md](CONFIG.md) for what each one
+actually allows/asks/denies:
 
-- **`bmo-config.toml`** - Full configuration with all options documented
-- **`bmo-config.minimal.toml`** - Minimal config with just the essentials
-- **`bmo-config.secure.toml`** - Maximum security for sensitive environments
+- **`bmo-config.default.toml`** - Balanced default, used automatically when
+  no `--config` is given. Also the fully-documented reference for every
+  option this tool supports.
+- **`bmo-config.yolo-mode.toml`** - Skips nearly all permission prompts.
+  Only use in a disposable environment.
+- **`bmo-config.hardened.toml`** - Reads unrestricted, writes scoped to the
+  current directory, sandboxed, everything else asks or is denied.
 
 For complete configuration documentation, see [CONFIG.md](CONFIG.md).
 

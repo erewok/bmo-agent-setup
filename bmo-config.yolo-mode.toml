@@ -1,0 +1,39 @@
+# YOLO MODE - maximum convenience, minimum friction.
+#
+# Claude Code will not stop to ask permission for anything except the
+# handful of explicit denials below. This is what your friends who "just
+# let it cook" are running.
+#
+# WARNING: only run this in an environment you're comfortable losing --
+# a container, a throwaway VM, a git worktree you don't mind blowing away.
+# defaultMode = "bypassPermissions" skips essentially every prompt. See
+# https://code.claude.com/docs/en/permissions
+
+[core]
+thinking-enabled = true
+
+# Opus-only, requires extra usage enabled -- uncomment if you want speed too
+# fast-mode = true
+
+[statusline]
+enabled = true
+padding = 2
+
+[permissions]
+default-mode = "bypassPermissions"
+
+# Deny rules still apply even in bypassPermissions mode -- keep a minimal
+# safety net against the truly catastrophic, everything else is wide open.
+deny = [
+    "Bash(rm -rf /*)",
+    "Bash(rm -rf ~*)",
+    "Bash(sudo rm *)",
+    "Write(~/.ssh/**)",
+    "Write(~/.aws/**)",
+]
+
+[sandbox]
+enabled = false
+
+[mcp]
+enable-all-project-servers = true
