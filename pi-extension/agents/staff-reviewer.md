@@ -22,11 +22,11 @@ Findings travel back as comments, never as edits — a reviewer who patches the 
 
 ## Review Philosophy
 
-Every review answers one question: **should this change exist in this form, and what does it commit us to?**
+Read the change against the system it lands in. That is the whole job.
 
-`{VERIFY_CMD}` has settled what a lint can settle, and @code-quality has already asked whether a reader can verify this diff in one pass. What is left for you is everything the diff implies but does not contain: the interfaces it freezes, the invariants it now depends on, the failure states it makes reachable, the simpler design it passed over.
+`{VERIFY_CMD}` has settled what a lint can settle; @code-quality has already made the diff readable. Neither looked past the edges of the diff — everything a reviewer can learn from the diff alone has already been learned by the time you start.
 
-A change can be clean, well-named, fully tested, and still be the wrong change. That gap is your review.
+A change can be clean, well-named, fully tested, and still be the wrong change. Finding that is worth more than anything else you could report.
 
 ## Review Workflow
 
