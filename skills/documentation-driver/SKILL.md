@@ -2,12 +2,12 @@
 name: documentation-driver
 disable-model-invocation: true
 description: >
-  Bootstrap the project specification files in docs/spec/ by spawning 5 @staff-engineer agents in parallel. Use this skill when the user wants to initialize, generate, or bootstrap project specs — including phrases like "document the project", "initialize specs", "generate specs", "create project specifications", "bootstrap docs/spec", "populate specs", or "set up project documentation".
+  Bootstrap the project specification files in docs/spec/ by spawning 5 @staff-architect agents in parallel. Use this skill when the user wants to initialize, generate, or bootstrap project specs — including phrases like "document the project", "initialize specs", "generate specs", "create project specifications", "bootstrap docs/spec", "populate specs", or "set up project documentation".
 ---
 
 # Documentation Driver
 
-You are the **Spec Initializer** — an orchestrator that spawns 5 `@staff-engineer` agents in parallel to populate `docs/spec/` with the Five Spec Files. You coordinate and verify, but you never write spec files yourself.
+You are the **Spec Initializer** — an orchestrator that spawns 5 `@staff-architect` agents in parallel to populate `docs/spec/` with the Five Spec Files. You coordinate and verify, but you never write spec files yourself.
 
 > **CRITICAL: Do NOT commit ANY changes (no `git add`, no `git commit`, no `git push`) unless EXPLICITLY instructed to do so by the user. This applies to ALL agents spawned by this skill.**
 
@@ -50,7 +50,7 @@ Tasks:
 
 ### Step 3: Spawn Agents
 
-**Spawn all agents in the SAME turn** using parallel `Task` tool calls. This is the entire point of the skill — maximum parallelism. Each agent is a `@staff-engineer` (`subagent_type: "staff-engineer"`).
+**Spawn all agents in the SAME turn** using parallel `Task` tool calls. This is the entire point of the skill — maximum parallelism. Each agent is a `@staff-architect` (`subagent_type: "staff-architect"`).
 
 Assign each agent its corresponding task via `TaskUpdate` (set `owner` to the agent name) and mark tasks `in_progress` before spawning.
 
@@ -74,7 +74,7 @@ Use `TeamDelete` to remove the team. Summarize results to the user.
 Each agent gets a focused prompt tailored to its specific engineering dimension. All prompts follow this base pattern:
 
 ```md
-Use the @staff-engineer agent to generate a project specification:
+Use the @staff-architect agent to generate a project specification:
 
 Generate the `docs/spec/{filename}` project specification file.
 
@@ -92,7 +92,7 @@ Requirements:
 ### architecture.md
 
 ```md
-Use the @staff-engineer agent to generate a project specification:
+Use the @staff-architect agent to generate a project specification:
 
 Generate the `docs/spec/architecture.md` project specification file.
 
@@ -112,7 +112,7 @@ Requirements:
 ### external-contracts.md
 
 ```md
-Use the @staff-engineer agent to generate a project specification:
+Use the @staff-architect agent to generate a project specification:
 Generate the `docs/spec/external-contracts.md` project specification file.
 Requirements:
 - Explore the codebase thoroughly using Read, Grep, Glob, and Bash
@@ -132,7 +132,7 @@ Requirements:
 ### security.md
 
 ```md
-Use the @staff-engineer agent to generate a project specification:
+Use the @staff-architect agent to generate a project specification:
 
 Generate the `docs/spec/security.md` project specification file.
 
@@ -152,7 +152,7 @@ Requirements:
 ### code-quality.md
 
 ```md
-Use the @staff-engineer agent to generate a project specification:
+Use the @staff-architect agent to generate a project specification:
 
 Generate the `docs/spec/code-quality.md` project specification file.
 
@@ -172,7 +172,7 @@ Requirements:
 ### testing.md
 
 ```md
-Use the @staff-engineer agent to generate a project specification:
+Use the @staff-architect agent to generate a project specification:
 
 Generate the `docs/spec/testing.md` project specification file.
 

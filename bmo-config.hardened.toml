@@ -19,26 +19,24 @@ default-mode = "default"
 # current working directory.
 allow = [
     "Read(*)",
-    "Write(./**)",
     "Edit(./**)",
 ]
 
 # Anything that reaches outside the current directory, or runs a shell
 # command, requires explicit approval.
 ask = [
-    "Write",
     "Edit",
     "Bash",
 ]
 
 # Explicitly deny dangerous operations regardless of the rules above
 deny = [
-    "Write(/etc/**)",
-    "Write(/usr/**)",
-    "Write(/bin/**)",
-    "Write(/sbin/**)",
-    "Write(~/.ssh/**)",
-    "Write(~/.aws/**)",
+    "Edit(/etc/**)",
+    "Edit(/usr/**)",
+    "Edit(/bin/**)",
+    "Edit(/sbin/**)",
+    "Edit(~/.ssh/**)",
+    "Edit(~/.aws/**)",
     "Bash(rm -rf *)",
     "Bash(sudo *)",
 ]

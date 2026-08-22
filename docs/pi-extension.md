@@ -12,7 +12,7 @@ Installing the extension gives you:
 | **`subagent` tool** | Spawn any dev-team agent in an isolated pi subprocess with a single tool call |
 | **`pi-bmo-dev-team` skill** | `/skill:pi-bmo-dev-team` — full orchestration: design → plan → implement → review → QA |
 | **`pi-bmo-documentation-driver` skill** | `/skill:pi-bmo-documentation-driver` — generate all five `docs/spec/` files in parallel |
-| **8 specialist agents** | `staff-engineer`, `project-manager`, `senior-engineer`, `qa-engineer`, `ux-designer`, `code-quality`, `documentation-writer`, `distributed-systems-expert` |
+| **9 specialist agents** | `staff-architect`, `staff-reviewer`, `project-manager`, `senior-engineer`, `qa-engineer`, `ux-designer`, `code-quality`, `documentation-writer`, `distributed-systems-expert` |
 
 The `bmo_*` tools, board context injection, status widget, and `/bmo-*` slash commands
 come from the [pi-bmo](https://github.com/erewok/pi-bmo) extension, **which must be
@@ -94,33 +94,39 @@ The skill picks a pattern automatically based on scope:
 
 | Pattern | When | Agent sequence |
 |---------|------|----------------|
-| **Small** | Bug fix, config change, small feature | PM → SE → Staff review |
-| **Medium** | Feature with architecture decisions | Staff (TDD) → PM → SE → Staff review → QA |
+| **Small** | Bug fix, config change, small feature | PM → SE → `just ci` → Reviewer |
+| **Medium** | Feature with architecture decisions | Architect → PM → SE → `just ci` → code-quality → Reviewer → QA |
 | **Large** | Multiple phases, user approval between each | Same as Medium, one phase at a time |
-| **UX-Heavy** | Any user-facing work needing design first | UX → Staff (TDD) → PM → SE → Staff review → QA |
+| **UX-Heavy** | Any user-facing work needing design first | UX → Architect → PM → SE → `just ci` → code-quality → Reviewer → QA |
 
 ### What the skill does
 
 1. **Initializes bmo** — runs `bmo_agent_init()` to see current board state
-2. **Designs** (Medium+) — spawns `staff-engineer` to write a TDD in `docs/tdd/`
+2. **Designs** (Medium+) — spawns `staff-architect` to write a TDD in `docs/tdd/`
 3. **Plans** — spawns `project-manager` to decompose work into bmo issues with phases,
    dependencies, and file attachments
 4. **Presents the plan** — shows you the phase breakdown and waits for approval on
    non-trivial work
 5. **Implements in parallel** — spawns `senior-engineer` agents in parallel within each
    phase, each claiming their issue before starting
-6. **Reviews** — spawns `staff-engineer` to review all changes; posts findings as bmo
-   comments; any blockers route back to the responsible engineer
-7. **Verifies** (Medium+) — spawns `qa-engineer` to check acceptance criteria
-8. **Reports** — summarizes what was done and reminds you nothing has been committed
+6. **Gates on CI** — runs `just ci` once at the phase boundary; everything a lint or test
+   can settle is settled deterministically before any model reviews the diff
+7. **Reviews** — spawns `code-quality` for readability, then `staff-reviewer` for
+   architecture and risk; posts findings as bmo comments; blockers route back to the
+   responsible engineer
+8. **Verifies** (Medium+) — spawns `qa-engineer` to check acceptance criteria
+9. **Reports** — summarizes what was done, lists any `DISCOVERED:` issues agents filed
+   along the way, and reminds you nothing has been committed
 
 ### What to expect
 
 - The skill never commits. When it finishes, run `git diff` to review everything.
 - Each `senior-engineer` agent runs in its own isolated pi subprocess with its own
   context window. They work in parallel without seeing each other's output.
-- `staff-engineer` review comments land directly on the bmo issue. The skill reads them
+- `staff-reviewer` review comments land directly on the bmo issue. The skill reads them
   and routes blockers back automatically.
+- Work an agent notices but is not scoped to do is filed as a `DISCOVERED:` bmo issue
+  rather than buried in a comment, so it survives the run that found it.
 - You'll see live streaming output from each agent as it runs.
 
 ---
@@ -130,7 +136,7 @@ The skill picks a pattern automatically based on scope:
 You can spawn any agent directly with the `subagent` tool:
 
 ```
-Use the staff-engineer agent to review my changes to src/auth/
+Use the staff-reviewer agent to review my changes to src/auth/
 ```
 
 ```
@@ -144,7 +150,7 @@ Use the distributed-systems-expert to review the TDD in docs/tdd/replication.md
 Or using the tool directly:
 
 ```
-subagent(agent="staff-engineer", task="Review all changes in git diff and post findings")
+subagent(agent="staff-reviewer", task="Review all changes in git diff and post findings")
 ```
 
 ### Parallel spawning
@@ -160,7 +166,7 @@ subagent(tasks=[
 
 ```
 subagent(chain=[
-  { agent: "staff-engineer", task: "Explore the codebase and write a TDD for adding OAuth support. Save to docs/tdd/oauth.md." },
+  { agent: "staff-architect", task: "Explore the codebase and write a TDD for adding OAuth support. Save to docs/tdd/oauth.md." },
   { agent: "project-manager", task: "Decompose the TDD at docs/tdd/oauth.md into bmo issues. Prior output: {previous}" }
 ])
 ```
@@ -169,11 +175,16 @@ subagent(chain=[
 
 ## Agent Reference
 
-### `staff-engineer`
+### `staff-architect`
 
-Produces TDDs in `docs/tdd/`, reviews all implementation changes, and maintains
-project specs in `docs/spec/`. The only agent that can sign off on closing an issue.
-Never writes implementation code.
+Produces TDDs in `docs/tdd/` and maintains project specs in `docs/spec/`. Never writes
+implementation code.
+
+### `staff-reviewer`
+
+Reviews all implementation changes across architecture, security, operations, performance,
+and testing. The only agent that can sign off on closing an issue. Posts findings as bmo
+comments and never edits code.
 
 ### `project-manager`
 
@@ -193,12 +204,12 @@ suite, posts results as bmo comments. Never claims or closes issues.
 ### `ux-designer`
 
 Produces UX design specs in `docs/ux/` for user-facing work. Always runs before the
-`staff-engineer` TDD in UX-Heavy workflows.
+`staff-architect` TDD in UX-Heavy workflows.
 
 ### `code-quality`
 
 Focused code quality pass: naming, complexity, dead code, test mechanics, conventions.
-Runs on Haiku for speed. Complements `staff-engineer` review rather than replacing it.
+Runs on Haiku for speed. Complements `staff-reviewer` review rather than replacing it.
 
 ### `documentation-writer`
 
@@ -221,7 +232,7 @@ Generate all five `docs/spec/` files in parallel for an existing codebase:
 ```
 
 The skill checks for existing files first and asks whether to overwrite or skip them.
-It then spawns five `staff-engineer` agents in parallel, one per spec file:
+It then spawns five `staff-architect` agents in parallel, one per spec file:
 
 | File | Content |
 |------|---------|

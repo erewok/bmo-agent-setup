@@ -1,7 +1,7 @@
 {
   "name": "pi-bmo-agents",
-  "version": "0.1.0",
-  "description": "Pi-code dev-team extension — staff-engineer, project-manager, senior-engineer, qa-engineer, ux-designer agents and orchestration skills for bmo",
+  "version": "0.2.0",
+  "description": "Pi-code dev-team extension — staff-architect, staff-reviewer, project-manager, senior-engineer, qa-engineer, ux-designer agents and orchestration skills for bmo",
   "type": "module",
   "keywords": ["pi-package", "bmo", "dev-team", "agents", "ai-agents"],
   "license": "Apache-2.0",

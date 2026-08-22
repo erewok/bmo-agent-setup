@@ -37,6 +37,25 @@ pub struct Permissions {
     pub disable_auto_mode: Option<String>,
 }
 
+/// Trust-boundary configuration consulted by `defaultMode: "auto"`'s
+/// classifier. `environment` is prose describing what's trusted (repos,
+/// domains, protected branches) -- project-specific, not something a
+/// generic template can fill in for you.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct AutoMode {
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub environment: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub allow: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub soft_deny: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub hard_deny: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub classify_all_shell: Option<bool>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct SandboxNetwork {
@@ -190,6 +209,8 @@ pub struct ClaudeCode {
     // Permissions
     #[serde(skip_serializing_if = "Option::is_none")]
     permissions: Option<Permissions>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    auto_mode: Option<AutoMode>,
 
     // Sandbox
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -260,6 +281,7 @@ impl ClaudeCode {
 
             // Permissions
             permissions: None,
+            auto_mode: None,
 
             // Sandbox
             sandbox: None,
@@ -387,6 +409,12 @@ impl ClaudeCode {
     }
 
     // Permissions builder methods
+
+    #[allow(dead_code)]
+    pub fn with_auto_mode(mut self, auto_mode: AutoMode) -> Self {
+        self.auto_mode = Some(auto_mode);
+        self
+    }
 
     #[allow(dead_code)]
     pub fn with_permissions(mut self, permissions: Permissions) -> Self {

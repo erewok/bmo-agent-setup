@@ -28,8 +28,8 @@ deny = [
     "Bash(rm -rf /*)",
     "Bash(rm -rf ~*)",
     "Bash(sudo rm *)",
-    "Write(~/.ssh/**)",
-    "Write(~/.aws/**)",
+    "Edit(~/.ssh/**)",
+    "Edit(~/.aws/**)",
 ]
 
 [sandbox]

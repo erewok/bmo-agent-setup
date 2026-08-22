@@ -2,9 +2,9 @@
  * pi-bmo-agents extension
  *
  * Provides the bmo-aware dev-team agent suite for pi-code:
- *   - `subagent` tool for spawning staff-engineer, project-manager,
- *     senior-engineer, qa-engineer, ux-designer, code-quality, and
- *     documentation-writer agents in isolated pi subprocesses
+ *   - `subagent` tool for spawning staff-architect, staff-reviewer,
+ *     project-manager, senior-engineer, qa-engineer, ux-designer,
+ *     code-quality, and documentation-writer agents in isolated pi subprocesses
  *   - Skills: dev-team orchestration workflow, documentation-driver
  *
  * Requires pi-bmo to be installed separately for the bmo_* tools:

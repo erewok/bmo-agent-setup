@@ -2,7 +2,7 @@
 name: pi-bmo-code-quality
 description: >
   Code quality review focused on naming, complexity, dead code, test quality, and
-  project conventions. Complements staff-engineer review. Use when the user wants a
+  project conventions. Complements staff-reviewer review. Use when the user wants a
   dedicated quality pass on implementation changes — phrases like "code quality review",
   "check code quality", "review naming and complexity", "quality pass", "check
   conventions", "dead code check", or "review test quality". Independent of the dev-team

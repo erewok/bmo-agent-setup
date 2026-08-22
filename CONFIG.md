@@ -34,18 +34,21 @@ cargo run -- --config bmo-config.hardened.toml --with-thinking=false
 
 ## Configuration Files
 
-Three presets are provided. If you're not sure which one you want: most
-people want **hardened** day to day, and reach for **yolo-mode** in a
-throwaway environment when they don't want to be asked about anything.
+Three presets are provided. If you're not sure which one you want: **default**
+is what most people want day to day — it's what `cargo run` uses with no
+flag — reach for **hardened** in an unfamiliar or higher-stakes codebase, and
+**yolo-mode** in a throwaway environment when you don't want to be asked
+about anything.
 
 ### `bmo-config.default.toml` - Default (used automatically)
 
-The balanced middle ground, and what `cargo run` uses when no `--config` is
-given. Reads, writes/edits inside the current directory, and a couple of
-read-only bash/jq commands are allowed outright; writes/edits elsewhere and
-other shell commands ask first; a few obviously dangerous paths are denied;
-the sandbox is off. Also doubles as the fully-documented reference for
-every option this tool supports — see
+Auto-mode-first, and what `cargo run` uses when no `--config` is given.
+`defaultMode = "auto"` hands routine judgment calls to Claude Code's own
+classifier instead of a static ask-list, so editing the project you opened
+Claude Code in doesn't stop to ask; deny still blocks a short list of
+obviously dangerous paths outright, and a couple of read-only commands are
+allowed outright too. The sandbox is off. Also doubles as the
+fully-documented reference for every option this tool supports — see
 [Configuration Reference](#configuration-reference) below.
 
 ### `bmo-config.yolo-mode.toml` - YOLO
@@ -85,8 +88,13 @@ A bare tool name (e.g. `"Bash"`) matches every call to that tool.
 "Bash"                  # every Bash call
 "Bash(git commit *)"    # Bash calls matching this pattern
 "Read(src/**)"          # Read calls scoped to a path glob
-"Write(/etc/**)"        # Write calls scoped to a path glob
+"Edit(/etc/**)"         # file edits scoped to a path glob
 ```
+
+Path-scoped file rules must use `Edit(...)`, never `Write(...)`. A single `Edit`
+rule covers every file-editing tool (Write, Edit, NotebookEdit). A `Write(path)`
+rule is ignored by file permission checks — Claude Code warns about it at startup,
+and in a `deny` list it silently protects nothing.
 
 ### Core Settings
 
@@ -131,18 +139,16 @@ default-mode = "default"
 
 allow = [
     "Read(*)",
-    "Write(./**)",   # writes inside the current directory are not asked about
-    "Edit(./**)",    # same for edits
+    "Edit(./**)",    # edits inside the current directory are not asked about
 ]
 
 ask = [
-    "Edit",          # edits outside the current directory still ask
-    "Write",         # writes outside the current directory still ask
+    "Edit",          # any edit outside the current directory still asks
     "Bash",
 ]
 
 deny = [
-    "Write(/etc/**)",
+    "Edit(/etc/**)",
     "Bash(sudo *)",
 ]
 
@@ -153,10 +159,39 @@ disable-auto-mode = "disable"                # Optional, set to "disable"
 
 `deny` always wins. Below that, a more specific pattern for the same tool
 wins over a broader one regardless of which list it's in — that's why
-`"Write(./**)"` in `allow` above takes effect for in-directory writes even
-though the broader `"Write"` in `ask` would otherwise catch them. This is
+`"Edit(./**)"` in `allow` above takes effect for in-directory edits even
+though the broader `"Edit"` in `ask` would otherwise catch them. This is
 the general technique for "allow X in this scope, ask about X everywhere
 else": put the narrow pattern in `allow`, the bare tool name in `ask`.
+
+### Auto Mode
+
+```toml
+[auto-mode]
+environment = [
+    "Source control: github.com/your-org/your-repo",
+    "Protected branches: main",
+    "Trusted internal domains: *.your-company.com",
+]
+allow = []            # Override the classifier's default allow rules
+soft-deny = []        # Override the classifier's default soft-block rules
+hard-deny = []        # Override the classifier's default hard-block rules
+classify-all-shell = false   # v2.1.193+
+```
+
+`default-mode = "auto"` (set under `[permissions]` above) turns on a
+classifier that reviews routine actions instead of prompting for each one —
+it's Anthropic's own documented default for Pro/Max/Team plans. It runs
+*underneath* `allow`/`ask`/`deny`, not instead of them: `deny` still blocks
+unconditionally, `ask` still forces a prompt even in auto mode, `allow`
+still short-circuits to yes. `[auto-mode]` only tunes the classifier's own
+judgment for whatever isn't already covered by those three lists.
+
+`environment` is prose describing this specific project's trust boundaries
+(source control, sensitive domains, protected branches) — it's what the
+classifier reads to judge context-dependent actions. It's inherently
+project- and org-specific, so this tool won't template it for you; write it
+per project, the way `bmo-config.default.toml` leaves it commented out.
 
 ### Sandbox
 

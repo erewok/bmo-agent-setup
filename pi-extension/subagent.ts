@@ -252,12 +252,12 @@ export function registerSubagentTool(pi: ExtensionAPI): void {
     description: [
       "Delegate tasks to specialized bmo dev-team agents in isolated contexts.",
       "Modes: single {agent, task}, parallel {tasks:[{agent,task}...]}, chain {chain:[{agent,task}...]} with {previous} placeholder.",
-      "Bundled agents: staff-engineer, project-manager, senior-engineer, qa-engineer, ux-designer, code-quality, documentation-writer.",
+      "Bundled agents: staff-architect, staff-reviewer, project-manager, senior-engineer, qa-engineer, ux-designer, code-quality, documentation-writer.",
       'Set agentScope to "all" (default) to also pick up user/project overrides.',
     ].join(" "),
     promptSnippet: "Spawn a dev-team agent (single, parallel, or chained)",
     promptGuidelines: [
-      "Use subagent to spawn staff-engineer, project-manager, senior-engineer, qa-engineer, ux-designer, code-quality, or documentation-writer agents.",
+      "Use subagent to spawn staff-architect, staff-reviewer, project-manager, senior-engineer, qa-engineer, ux-designer, code-quality, or documentation-writer agents.",
       "For the dev-team workflow, follow the orchestration pattern in the dev-team skill: PM first, then parallel SE agents, then review, then QA.",
     ],
     parameters: Type.Object({

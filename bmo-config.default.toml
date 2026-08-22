@@ -1,9 +1,11 @@
-# DEFAULT - a balanced mix of bmo-config.yolo-mode.toml (never asks) and
-# bmo-config.hardened.toml (sandboxed, scoped to the current directory).
-# Reads, writes/edits inside the current directory, and a couple of
-# read-only bash/jq commands are allowed outright; writes/edits elsewhere
-# and other shell commands ask first; a few clearly dangerous paths are
-# denied; the sandbox is off for lower friction.
+# DEFAULT - auto-mode-first: defaultMode = "auto" hands routine judgment
+# calls to Claude Code's own classifier instead of a static ask-list, so
+# editing the project you opened Claude Code in doesn't stop to ask. The
+# classifier runs underneath allow/ask/deny, not instead of them: deny
+# still blocks unconditionally, ask still forces a prompt, allow still
+# short-circuits to yes. This file keeps deny as the hard stop and allow
+# for a couple of explicit carve-outs, and otherwise leaves ask empty so
+# the classifier does the rest. The sandbox is off for lower friction.
 #
 # This file is compiled into the binary and used automatically by
 # `cargo run` (or the built binary) whenever no `--config` flag is given --
@@ -18,7 +20,9 @@
 #
 # Schema reference: https://code.claude.com/docs/en/settings
 # Permission rule syntax: "ToolName" or "ToolName(pattern)" -- no colons.
-# Examples: "Bash", "Bash(git commit *)", "Read(src/**)", "Write(/etc/**)"
+# Examples: "Bash", "Bash(git commit *)", "Read(src/**)", "Edit(/etc/**)"
+# Path-scoped file rules must use Edit(...), never Write(...) — one Edit rule
+# covers every file-editing tool, and Write(path) rules are silently ignored.
 
 [core]
 # Model to use (optional)
@@ -84,28 +88,30 @@ padding = 2
 [permissions]
 # Default permission mode: "acceptEdits", "auto", "bypassPermissions", "default",
 # "delegate" (experimental agent teams), "dontAsk", "plan"
-default-mode = "default"
+#
+# "auto" is Anthropic's own documented default for Pro/Max/Team plans: a
+# classifier reviews routine actions instead of prompting for each one. It
+# still honors ask/deny below -- this isn't a bypass, it's a smarter default.
+default-mode = "auto"
 
 # Permission rules - "ToolName" or "ToolName(pattern)", tool names are case-sensitive
-# Writes/edits inside the current directory are allowed outright; writes
-# elsewhere still ask (see below).
+# Writes/edits inside the current directory, and a couple of read-only
+# commands, are allowed outright regardless of what the classifier decides.
 allow = [
     "Read(*)",
-    "Write(./**)",
     "Edit(./**)",
     "Bash(bmo *)",
     "Bash(jq *)",
 ]
 
-ask = [
-    "Write",
-    "Edit",
-    "Bash",
-]
+# Left empty: under "auto", the classifier handles routine judgment calls.
+# Add entries here only for things you always want a human prompt for
+# regardless of what the classifier would decide.
+ask = []
 
 deny = [
-    "Write(/etc/**)",
-    "Write(/usr/**)",
+    "Edit(/etc/**)",
+    "Edit(/usr/**)",
 ]
 
 # Additional directories accessible to agent (optional)
@@ -116,6 +122,20 @@ deny = [
 
 # Set to "disable" to prevent auto mode from being activated (optional)
 # disable-auto-mode = "disable"
+
+# Trust-boundary config for the "auto" classifier above (optional). See
+# CONFIG.md's Auto Mode section. `environment` is prose describing what's
+# trusted for *this* project (repos, domains, protected branches) -- left
+# unset here on purpose, since a generic default can't know that for you.
+# [auto-mode]
+# environment = [
+#     "Source control: github.com/your-org/your-repo",
+#     "Protected branches: main",
+# ]
+# allow = []
+# soft-deny = []
+# hard-deny = []
+# classify-all-shell = false   # v2.1.193+
 
 [sandbox]
 # Enable sandbox mode

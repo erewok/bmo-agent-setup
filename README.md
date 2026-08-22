@@ -43,7 +43,7 @@ the dev-team workflow, per-agent reference, and troubleshooting.
 
 `bmo-agent-setup` contains a [BMO](https://github.com/erewok/bmo)-powered agent team for claude-code or pi-code:
 
-- **agents/** — Five agent definition files (Markdown prompts consumed by Claude Code)
+- **agents/** — 9 agent definition files (Markdown prompts consumed by Claude Code)
 - **skills/** — Two orchestration skills (`dev-team` and `documentation-driver`)
 - **settings.json** — Claude Code configuration
 - **statusline.sh** — Status bar script for Claude Code
@@ -56,9 +56,13 @@ The agent team is configured to use **[`bmo`](https://github.com/erewok/bmo)** f
 
 ## Agent Team
 
-### Staff Engineer (`@staff-engineer`)
+### Staff Architect (`@staff-architect`)
 
-Technical architect and code reviewer. Produces Technical Design Documents (TDDs) in `docs/tdd/` for complex work, maintains project specifications in `docs/spec/`, and reviews all `@senior-engineer` implementation changes before they are considered complete. Never writes implementation code — outputs are design documents and review feedback only.
+Technical architect and specification owner. Produces Technical Design Documents (TDDs) in `docs/tdd/` for complex work and maintains project specifications in `docs/spec/`. Never writes implementation code — its outputs are design documents.
+
+### Staff Reviewer (`@staff-reviewer`)
+
+Reviews all `@senior-engineer` implementation changes across architecture, security, operations, performance, and testing before they are considered complete. Holds no write tools at all, so findings travel back as bmo comments rather than as edits — a reviewer that patches the code is no longer reviewing it.
 
 ### Project Manager (`@project-manager`)
 
@@ -66,7 +70,7 @@ Plans and decomposes work into BMO issues. Explores the codebase, creates issue 
 
 ### Senior Engineer (`@senior-engineer`)
 
-Implements solutions from pre-planned BMO issues. Claims issues atomically with `bmo issue claim`, implements within the scoped files, then moves issues to `review` status when done. Does **not** close issues (closing requires `@staff-engineer` sign-off) and does **not** commit code unless explicitly instructed after review passes.
+Implements solutions from pre-planned BMO issues. Claims issues atomically with `bmo issue claim`, implements within the scoped files, then moves issues to `review` status when done. Does **not** close issues (closing requires `@staff-reviewer` sign-off) and does **not** commit code unless explicitly instructed after review passes.
 
 ### QA Engineer (`@qa-engineer`)
 
@@ -78,7 +82,7 @@ Produces UX design specs in `docs/ux/` for user-facing work: UI, CLI commands, A
 
 ### Code Quality Reviewer (`@code-quality`)
 
-Reviews implementation output for readability, clarity, and structural correctness. Evaluates naming, function size, single responsibility, module flow, nesting depth, magic values, misplaced code, duplication, and minimum-necessary code. Read-only — does not write, edit, or commit code. Does not review architecture, security, or operational concerns (those belong to `@staff-engineer`). Used as a feedback loop for `@senior-engineer` output before `@staff-engineer` review.
+Reviews implementation output for readability, clarity, and structural correctness. Evaluates naming, function size, single responsibility, module flow, nesting depth, magic values, misplaced code, duplication, and minimum-necessary code. Read-only — does not write, edit, or commit code. Does not review architecture, security, or operational concerns (those belong to `@staff-reviewer`). Used as a feedback loop for `@senior-engineer` output before `@staff-reviewer` review.
 
 ---
 
@@ -86,7 +90,7 @@ Reviews implementation output for readability, clarity, and structural correctne
 
 | Skill | Description |
 |---|---|
-| **dev-team** | Coordinates all five agents for planning and executing development work |
+| **dev-team** | Coordinates the agent team for planning and executing development work |
 | **documentation-driver** | Bootstraps `docs/spec/` project specifications for new repositories |
 
 ---
@@ -100,7 +104,7 @@ The agent team uses the [`bmo`](https://github.com/erewok/bmo) CLI for issue tra
 Issues flow through a defined lifecycle enforced by the agent roles:
 
 ```
-todo → in-progress (senior-engineer claims) → review (senior-engineer when done) → done (orchestrator after staff-engineer sign-off)
+todo → in-progress (senior-engineer claims) → review (senior-engineer when done) → done (orchestrator after staff-reviewer sign-off)
 ```
 
 ### Who Does What in BMO
@@ -109,7 +113,8 @@ todo → in-progress (senior-engineer claims) → review (senior-engineer when d
 |---|---|---|---|---|
 | **senior-engineer** | ✅ only agent that claims | ✅ when done | ❌ | ✅ |
 | **qa-engineer** | ❌ | ❌ | ❌ | ✅ only |
-| **staff-engineer** | ❌ | ❌ | ❌ | ✅ |
+| **staff-architect** | ❌ | ❌ | ❌ | ✅ |
+| **staff-reviewer** | ❌ | ❌ | ❌ | ✅ |
 | **project-manager** | ❌ | ❌ | ❌ | ✅ |
 | **orchestrator** (dev-team) | ❌ | ❌ | ✅ after review | ❌ |
 
@@ -181,9 +186,9 @@ just run ~/my-claude-env
 Three presets are included — see [CONFIG.md](CONFIG.md) for what each one
 actually allows/asks/denies:
 
-- **`bmo-config.default.toml`** - Balanced default, used automatically when
-  no `--config` is given. Also the fully-documented reference for every
-  option this tool supports.
+- **`bmo-config.default.toml`** - Auto-mode-first default, used
+  automatically when no `--config` is given. Also the fully-documented
+  reference for every option this tool supports.
 - **`bmo-config.yolo-mode.toml`** - Skips nearly all permission prompts.
   Only use in a disposable environment.
 - **`bmo-config.hardened.toml`** - Reads unrestricted, writes scoped to the
@@ -229,7 +234,8 @@ cp -r ~/my-claude-env/{agents,skills} ~/.claude/ && \
 │   ├── project-manager.md
 │   ├── qa-engineer.md
 │   ├── senior-engineer.md
-│   ├── staff-engineer.md
+│   ├── staff-architect.md
+│   ├── staff-reviewer.md
 │   └── ux-designer.md
 ├── skills/
 │   ├── documentation-driver/

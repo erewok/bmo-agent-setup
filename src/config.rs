@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
-use crate::claude_code::{ClaudeCode, Permissions};
+use crate::claude_code::{AutoMode, ClaudeCode, Permissions};
 
 /// TOML configuration file structure
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -18,6 +18,9 @@ pub struct ConfigFile {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub permissions: Option<PermissionsConfig>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_mode: Option<AutoModeConfig>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sandbox: Option<SandboxConfig>,
@@ -140,6 +143,29 @@ pub struct PermissionsConfig {
     /// Set to "disable" to prevent auto mode from being activated (optional)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disable_auto_mode: Option<String>,
+}
+
+/// Trust-boundary config for `defaultMode = "auto"`'s classifier. `environment`
+/// is project-specific trust-boundary prose -- this tool won't fabricate it,
+/// so it's left for the user to fill in per project (see CONFIG.md).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct AutoModeConfig {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub environment: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub soft_deny: Option<Vec<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hard_deny: Option<Vec<String>>,
+
+    /// v2.1.193+ (optional)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub classify_all_shell: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -374,6 +400,29 @@ impl ConfigFile {
             }
 
             builder = builder.with_permissions(permissions);
+        }
+
+        // Auto mode
+        if let Some(ref auto_mode) = self.auto_mode {
+            let mut mode = AutoMode::default();
+
+            if let Some(ref environment) = auto_mode.environment {
+                mode.environment = environment.clone();
+            }
+            if let Some(ref allow) = auto_mode.allow {
+                mode.allow = allow.clone();
+            }
+            if let Some(ref soft_deny) = auto_mode.soft_deny {
+                mode.soft_deny = soft_deny.clone();
+            }
+            if let Some(ref hard_deny) = auto_mode.hard_deny {
+                mode.hard_deny = hard_deny.clone();
+            }
+            if let Some(value) = auto_mode.classify_all_shell {
+                mode.classify_all_shell = Some(value);
+            }
+
+            builder = builder.with_auto_mode(mode);
         }
 
         // Sandbox

@@ -2,7 +2,7 @@
 name: pi-bmo-documentation-driver
 disable-model-invocation: true
 description: >
-  Bootstrap project specification files in docs/spec/ by spawning staff-engineer
+  Bootstrap project specification files in docs/spec/ by spawning staff-architect
   agents in parallel. Use when the user wants to initialize, generate, or bootstrap
   project specs — phrases like "document the project", "initialize specs",
   "generate specs", "create project specifications", "bootstrap docs/spec",
@@ -11,7 +11,7 @@ description: >
 
 # Documentation Driver
 
-You spawn `staff-engineer` agents in parallel using the `subagent` tool to populate
+You spawn `staff-architect` agents in parallel using the `subagent` tool to populate
 `docs/spec/` with the Five Spec Files. You coordinate and verify; you never write
 spec files yourself.
 
@@ -40,11 +40,11 @@ Spawn all agents **in a single parallel `subagent` call**. Parallelism is the en
 subagent(
   agentScope="all",
   tasks=[
-    { agent: "staff-engineer", task: "<architecture prompt>" },
-    { agent: "staff-engineer", task: "<external-contracts prompt>" },
-    { agent: "staff-engineer", task: "<security prompt>" },
-    { agent: "staff-engineer", task: "<code-quality prompt>" },
-    { agent: "staff-engineer", task: "<testing prompt>" },
+    { agent: "staff-architect", task: "<architecture prompt>" },
+    { agent: "staff-architect", task: "<external-contracts prompt>" },
+    { agent: "staff-architect", task: "<security prompt>" },
+    { agent: "staff-architect", task: "<code-quality prompt>" },
+    { agent: "staff-architect", task: "<testing prompt>" },
   ]
 )
 ```
