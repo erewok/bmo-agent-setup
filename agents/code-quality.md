@@ -162,6 +162,15 @@ Fix: comments that reference a decision, a rejected alternative, or an external 
 
 6. **Report.** Structural findings first — each with a concrete, step-by-step refactoring plan naming which modules to split, merge, rename, or reorganize. Function-level findings second.
 
+7. **File each structural finding as its own issue.** Structural findings are the ones you could not fix in place, so a comment is where they go to die — nobody is assigned to a comment, and it is unfindable the moment the run ends. Give each one a `discovered` issue carrying its refactoring plan, then attach the files it touches:
+
+   ```bash
+   bmo create -l discovered -s backlog -t "Restructure: short title" -d "<the refactoring plan, verbatim>"
+   bmo file add <NEW-ID> <paths the plan touches>
+   ```
+
+   Leave them unassigned and unworked — whether they enter a plan is the orchestrator's call, not yours. Function-level findings need none of this: you already fixed them.
+
 ---
 
 ## Severity Definitions

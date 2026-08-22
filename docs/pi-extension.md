@@ -94,10 +94,10 @@ The skill picks a pattern automatically based on scope:
 
 | Pattern | When | Agent sequence |
 |---------|------|----------------|
-| **Small** | Bug fix, config change, small feature | PM → SE → `just ci` → Reviewer |
-| **Medium** | Feature with architecture decisions | Architect → PM → SE → `just ci` → code-quality → Reviewer → QA |
+| **Small** | Bug fix, config change, small feature | PM → SE → verify → Reviewer |
+| **Medium** | Feature with architecture decisions | Architect → PM → SE → verify → code-quality → Reviewer → QA |
 | **Large** | Multiple phases, user approval between each | Same as Medium, one phase at a time |
-| **UX-Heavy** | Any user-facing work needing design first | UX → Architect → PM → SE → `just ci` → code-quality → Reviewer → QA |
+| **UX-Heavy** | Any user-facing work needing design first | UX → Architect → PM → SE → verify → code-quality → Reviewer → QA |
 
 ### What the skill does
 
@@ -109,8 +109,10 @@ The skill picks a pattern automatically based on scope:
    non-trivial work
 5. **Implements in parallel** — spawns `senior-engineer` agents in parallel within each
    phase, each claiming their issue before starting
-6. **Gates on CI** — runs `just ci` once at the phase boundary; everything a lint or test
-   can settle is settled deterministically before any model reviews the diff
+6. **Gates on verification** — discovers the project's own verification command (a `justfile`
+   or `Makefile` aggregate recipe, a package script, else the steps in `.github/workflows/`)
+   and runs it once at the phase boundary; everything a lint or test can settle is settled
+   deterministically before any model reviews the diff
 7. **Reviews** — spawns `code-quality` for readability, then `staff-reviewer` for
    architecture and risk; posts findings as bmo comments; blockers route back to the
    responsible engineer

@@ -48,10 +48,10 @@ You spawn each of these with the `subagent` tool and keep bmo in sync; none of t
 
 | Pattern | When to use | Agent sequence |
 |---------|-------------|----------------|
-| **Small** | Bug fix, config, small feature — no TDD needed | PM → SE → `just ci` → Reviewer |
-| **Medium** | Feature/refactor with architecture decisions | Architect → PM → SE → `just ci` → @code-quality → Reviewer → QA |
+| **Small** | Bug fix, config, small feature — no TDD needed | PM → SE → `{VERIFY_CMD}` → Reviewer |
+| **Medium** | Feature/refactor with architecture decisions | Architect → PM → SE → `{VERIFY_CMD}` → @code-quality → Reviewer → QA |
 | **Large** | Multiple phases with user approval gates | Same as Medium, one phase at a time |
-| **UX-Heavy** | User-facing work needing design first | UX → Architect → PM → SE → `just ci` → @code-quality → Reviewer → QA |
+| **UX-Heavy** | User-facing work needing design first | UX → Architect → PM → SE → `{VERIFY_CMD}` → @code-quality → Reviewer → QA |
 
 Skip TDD (even for Medium) when the work is already well-defined by existing specs.
 
@@ -63,6 +63,17 @@ Skip TDD (even for Medium) when the work is already well-defined by existing spe
 bmo_agent_init()
 bmo_list()   # check for existing issues — don't re-plan work already in bmo
 ```
+
+### 1b. Resolve the verification command
+
+`{VERIFY_CMD}` is whatever *this* project runs to prove a change is sound — format check, lints, build, and full test suite in one invocation. Resolve it before spawning any agent and pass the resolved string into every task template. Projects name it differently, so discover it:
+
+1. **Task runner with an aggregate recipe** — `justfile` (`just ci`, `just check`), `Makefile` (`make ci`), `Taskfile.yml`. Take the recipe that runs the full set, not one step of it.
+2. **Package script** — `package.json`, matching the runner to the lockfile; `pyproject.toml` with `nox`/`tox`/`poe`; `Cargo.toml`; `go.mod`.
+3. **The CI workflow itself** — `.github/workflows/*.yml` (or `.gitlab-ci.yml`, `.circleci/config.yml`), chaining its `run:` steps with `&&`. This is the authoritative answer to "what must pass".
+4. **The project's docs** — a Development or Contributing section in `README.md` or `CONTRIBUTING.md`.
+
+If nothing runnable turns up, stop and ask the user rather than guessing. A gate that runs the wrong command — or silently runs nothing — is worse than no gate: the phase reports green, and @staff-reviewer is told deterministic checks passed on a diff where they never ran.
 
 ### 2. Design (Medium+ / UX-Heavy only)
 
@@ -102,7 +113,7 @@ Then spawn all agents in the phase **in parallel** (after all issues are pre-cla
 ```
 subagent(
   tasks=[
-    { agent: "senior-engineer", task: "Complete BMO-{ID}: {title}\nAgent ref: {AGENT_REF}\n{description}\nScoped files: {files}" },
+    { agent: "senior-engineer", task: "Complete BMO-{ID}: {title}\nAgent ref: {AGENT_REF}\n{description}\nScoped files: {files}\nVerification command: {VERIFY_CMD}" },
     { agent: "senior-engineer", task: "Complete BMO-{ID2}: ..." },
   ],
   agentScope="all"
@@ -113,13 +124,13 @@ subagent(
 
 Wait for all agents in a phase before starting the next phase.
 
-### 5. Gate on CI
+### 5. Gate on verification
 
-Once every agent in the phase has finished, run `just ci` — format check, lints, build, full test suite.
+Once every agent in the phase has finished, run `{VERIFY_CMD}`.
 
-Run it here rather than inside each agent: parallel agents contend on the same build lock, so one shared run at the phase boundary catches the same failures in a fraction of the time. CI must pass before review begins. Everything it catches is deterministic, so leaving those findings to a reviewer turns them into a coin flip on what that reviewer happened to notice.
+Run it here rather than inside each agent: parallel agents contend on the same build lock, so one shared run at the phase boundary catches the same failures in a fraction of the time. It must pass before review begins. Everything it catches is deterministic, so leaving those findings to a reviewer turns them into a coin flip on what that reviewer happened to notice.
 
-On failure, route the specific failures back to the owning @senior-engineer and re-run `just ci` until it passes.
+On failure, route the specific failures back to the owning @senior-engineer and re-run `{VERIFY_CMD}` until it passes.
 
 ### 6. Review
 
@@ -145,7 +156,7 @@ subagent(
   bmo_claim(id=ISSUE_ID, assignee=NEW_AGENT_REF)
   ```
   Then spawn a new @senior-engineer: "Fix review blockers on BMO-{ID}. Run bmo_comment(action=list) first — blockers are in the staff-reviewer review."
-  After fixes, re-run `just ci` and then review — a blocker fix can break the build or a test that passed at the phase gate. Do not proceed to QA until both pass.
+  After fixes, re-run `{VERIFY_CMD}` and then review — a blocker fix can break the build or a test that passed at the phase gate. Do not proceed to QA until both pass.
 
 ### 7. Verify (Medium+ only)
 
@@ -223,8 +234,10 @@ Review readability across every change in this phase.
   naming consistency and module responsibility are only visible across the full change
 - Make direct edits for everything fixable in place
 - Produce a refactoring plan for structural problems too large to edit now
-- Keep behavior identical: `just ci` passed on this diff before you started and must still
-  pass afterward
+- File each structural finding as its own DISCOVERED issue carrying its refactoring plan —
+  a plan left only in a comment has no owner and is unfindable after the run
+- Keep behavior identical: `{VERIFY_CMD}` passed on this diff before you started and must
+  still pass afterward
 - Post the refactoring plan as a bmo comment on the relevant issue
 """
 )
@@ -240,9 +253,9 @@ subagent(
 Review all implementation changes.
 
 - Check git diff for modified files
-- Evaluate: architecture, security, operations, performance, testing
-- `just ci` has already passed and @code-quality has run — incorporate both rather than
-  re-deriving them
+- Evaluate: architecture, design, security, operations, performance, testing
+- `{VERIFY_CMD}` has already passed and @code-quality has run — incorporate both rather
+  than re-deriving them
 - Post findings as bmo comments on each relevant issue (use bmo_comment tool)
 - Severity: Blocker / Concern / Suggestion / Question / Praise
 """
@@ -313,13 +326,15 @@ Description:
 Scoped files:
 {list of files from issue}
 
+Verification command: {VERIFY_CMD}
+
 The issue is already claimed under {AGENT_REF}. Do not claim again.
 
 - Call bmo_agent_init(), then check docs/tdd/, docs/ux/, docs/spec/ for context
 - Call bmo_comment(action="list", id={ID}) to review all comments before starting
 - Only modify the scoped files listed above
 - Do not commit any changes
-- Run `just fmt` and `just test` before finishing; the orchestrator gates the whole phase on `just ci`
+- Run the format and test steps of `{VERIFY_CMD}` before finishing; the orchestrator gates the whole phase on the full `{VERIFY_CMD}`
 - If you discover work outside your scope, file it and keep going — do not expand scope:
   bmo_create(title="DISCOVERED: [short title]", description="Found while working BMO-{ID}: [description]")
 - When done: bmo_move(id={ID}, status="review") and bmo_comment(action="add", id={ID}, author="{AGENT_REF}", body="Completed: [summary]")

@@ -29,7 +29,7 @@ Never commit — no `git add`, `git commit`, or `git push`. Committing is irreve
 
 4. **Implement.** Write the solution according to the issue description and specs. Stay within the issue's stated file scope. When you discover adjacent work that belongs in a separate issue, file it with `bmo create -l discovered -s backlog` and continue — don't bundle it into the current issue. A labeled backlog issue can be queried after the run ends; a comment describing the same finding cannot, and is lost.
 
-5. **Verify.** Run `just fmt`, then `just test`. The orchestrator gates the whole phase on `just ci`, so formatting or clippy failures you leave behind block every other issue in the phase, not only yours.
+5. **Verify.** Run the format and test steps of `{VERIFY_CMD}` — the project's full verification command, given to you by the orchestrator. Working standalone without one, discover it: an aggregate recipe in a `justfile`, `Makefile`, or `package.json`, else the `run:` steps in `.github/workflows/`. The orchestrator gates the whole phase on the full `{VERIFY_CMD}`, so formatting or lint failures you leave behind block every other issue in the phase, not only yours.
 
 6. **Hand off.** Move to review and add a completion comment (see template below). Do not close the issue — closing happens only after @staff-reviewer sign-off.
 

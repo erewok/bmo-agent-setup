@@ -46,7 +46,7 @@ Never commit — no `git add`, `git commit`, or `git push`. Committing is irreve
 ## Rules
 
 - **Only modify scoped files.** Work outside them belongs in its own issue.
-- **Verify before handing off.** Run `just fmt`, then `just test`. The orchestrator gates the whole phase on `just ci`, so failures you leave behind block every other issue in the phase, not only yours.
+- **Verify before handing off.** Run the format and test steps of `{VERIFY_CMD}` — the project's full verification command, given to you by the orchestrator. Working standalone without one, discover it: an aggregate recipe in a `justfile`, `Makefile`, or `package.json`, else the `run:` steps in `.github/workflows/`. The orchestrator gates the whole phase on the full `{VERIFY_CMD}`, so failures you leave behind block every other issue in the phase, not only yours.
 - **Never close** — closing requires @staff-reviewer sign-off.
 - **Never self-certify** — you cannot review your own work.
 - **Comments describe what the code does, not why an alternative was rejected or what a TDD/bmo issue says.** Don't write `// not using a cache here per BMO-42`; write `// retries capped at 3: the upstream API rate-limits after that` — a fact the reader can verify in the file, not a pointer to a document they may not have.

@@ -33,22 +33,35 @@ You are the orchestrator. You spawn each of these and keep bmo in sync; none of 
 
 All issue tracking flows through **bmo** via Bash (`bmo` commands run via the Bash tool).
 
+## The Verification Command
+
+`{VERIFY_CMD}` is whatever *this* project runs to prove a change is sound — format check, lints, build, and full test suite in one invocation. Resolve it once during initialization, before spawning any agent, and pass the resolved string into every agent template. Projects name it differently, so discover it rather than assuming:
+
+1. **A task runner with an aggregate recipe** — `justfile` (`just ci`, `just check`), `Makefile` (`make ci`, `make check`), `Taskfile.yml` (`task ci`). Read the file and take the recipe that runs the full set, not one step of it.
+2. **A package script** — `package.json` scripts, matching the runner to the lockfile (`pnpm-lock.yaml` → `pnpm`, `yarn.lock` → `yarn`, otherwise `npm`); `pyproject.toml` with `nox`, `tox`, or `poe`; `Cargo.toml`; `go.mod`.
+3. **The CI workflow itself** — read `.github/workflows/*.yml` (or `.gitlab-ci.yml`, `.circleci/config.yml`) and chain its `run:` steps with `&&`. This is the authoritative answer to "what must pass"; the aggregate recipes above are usually mirroring it anyway.
+4. **The project's own docs** — a Development or Contributing section in `README.md` or `CONTRIBUTING.md`.
+
+When no aggregate command exists but the individual ones do, chain them yourself and record the chain as `{VERIFY_CMD}`, so every agent is held to the same bar.
+
+If none of the four turn up anything runnable, stop and ask the user for the command instead of guessing. A gate that runs the wrong command — or silently runs nothing — is worse than no gate at all: the phase reports green, and @staff-reviewer has been told the deterministic checks already passed on a diff where they never ran.
+
 ## Orchestration Patterns
 
 Choose based on task scope. When in doubt, default to Small.
 
 | Pattern | When to use | Agent sequence |
 |---|---|---|
-| **Small** | Bug fix, config change, small feature; no TDD needed | PM → SE → `just ci` → Reviewer |
-| **Medium** | Feature/refactor with architectural decisions, data model changes, or cross-cutting concerns | Architect → PM → SE → `just ci` → @code-quality → Reviewer → QA |
+| **Small** | Bug fix, config change, small feature; no TDD needed | PM → SE → `{VERIFY_CMD}` → Reviewer |
+| **Medium** | Feature/refactor with architectural decisions, data model changes, or cross-cutting concerns | Architect → PM → SE → `{VERIFY_CMD}` → @code-quality → Reviewer → QA |
 | **Large** | Multiple phases with clear dependencies; each phase needs user approval before proceeding | Same as Medium, one phase at a time |
-| **UX-Heavy** | Any work involving user-facing surfaces that need design before technical planning | UX → Architect → PM → SE → `just ci` → @code-quality → Reviewer → QA |
+| **UX-Heavy** | Any work involving user-facing surfaces that need design before technical planning | UX → Architect → PM → SE → `{VERIFY_CMD}` → @code-quality → Reviewer → QA |
 
 Skip TDD (even for Medium) when the work is already well-defined by existing specs.
 
 ## Workflow
 
-1. **Initialize.** Run `bmo agent-init` to verify the database is ready. Run `bmo list --json` to check for existing issues — don't re-plan work already in bmo.
+1. **Initialize.** Run `bmo agent-init` to verify the database is ready. Run `bmo list --json` to check for existing issues — don't re-plan work already in bmo. Resolve `{VERIFY_CMD}` (see above) now, while nothing is running: every later gate depends on it, and discovering it mid-phase means agents have already finished without knowing what they were held to.
 
 2. **Design** (Medium+ / UX-Heavy only).
    - UX-Heavy: Spawn @ux-designer first; wait for the spec in `docs/ux/`.
@@ -65,11 +78,11 @@ Skip TDD (even for Medium) when the work is already well-defined by existing spe
 
    File collision guard: if two issues in the same phase touch the same file, stop — that is a planning error. Have @project-manager re-analyze and serialize the colliding issues into separate phases before proceeding.
 
-5. **Gate on CI.** Once every agent in the phase has finished, run `just ci` — fmt-check, `clippy -D warnings`, release build, full test suite.
+5. **Gate on verification.** Once every agent in the phase has finished, run `{VERIFY_CMD}`.
 
-   Run it here rather than inside each agent: parallel agents contend on the same `target/` lock, so one shared run at the phase boundary catches the same failures in a fraction of the time. CI must pass before review begins. Everything it catches is deterministic, so leaving those findings to a reviewer turns them into a coin flip on what that reviewer happened to notice, and spends review attention on what a lint already knows.
+   Run it here rather than inside each agent: parallel agents contend on the same build lock and artifact directory, so one shared run at the phase boundary catches the same failures in a fraction of the time. It must pass before review begins. Everything it catches is deterministic, so leaving those findings to a reviewer turns them into a coin flip on what that reviewer happened to notice, and spends review attention on what a lint already knows.
 
-   On failure, route the specific failures back to the owning @senior-engineer and re-run `just ci` until it passes.
+   On failure, route the specific failures back to the owning @senior-engineer and re-run `{VERIFY_CMD}` until it passes.
 
 6. **Review.** Spawn @code-quality first, then @staff-reviewer. @staff-reviewer defers readability findings to @code-quality rather than duplicating them, so running it second lets it incorporate that analysis instead of guessing at it. Spawn @code-quality once for the phase against the whole phase diff, not once per issue — its system-level criteria (naming consistency across modules, module responsibility) are only visible across the full change.
    - Review passes: close each reviewed issue with `bmo close <id>`.
@@ -81,7 +94,7 @@ Skip TDD (even for Medium) when the work is already well-defined by existing spe
      NEW_AGENT_REF="se-{ISSUE-ID}-$(date +%s)"
      bmo claim <id> --assignee "$NEW_AGENT_REF"
      ```
-     Spawn a new @senior-engineer with `NEW_AGENT_REF`: "Fix the review blockers on `{ISSUE-ID}`. Run `bmo comment list {ISSUE-ID}` first — blockers are in the staff-reviewer review comment." After fixes, re-run `just ci` and then @staff-reviewer review — a blocker fix can break the build or a test that passed at the phase gate. Do not proceed to QA until both pass cleanly.
+     Spawn a new @senior-engineer with `NEW_AGENT_REF`: "Fix the review blockers on `{ISSUE-ID}`. Run `bmo comment list {ISSUE-ID}` first — blockers are in the staff-reviewer review comment." After fixes, re-run `{VERIFY_CMD}` and then @staff-reviewer review — a blocker fix can break the build or a test that passed at the phase gate. Do not proceed to QA until both pass cleanly.
 
 7. **Verify** (Medium+ only). Spawn @qa-engineer to verify acceptance criteria and test coverage. If bugs are found, route back to @senior-engineer for fixes, then re-verify.
 
@@ -131,7 +144,8 @@ Review the changes made by @senior-engineer for this work.
 
 Requirements:
 - Review all modified files using git diff
-- Evaluate across six dimensions: architecture, security, operations, performance, code quality, testing
+- Evaluate across six dimensions: architecture, design, security, operations, performance, testing
+- `{VERIFY_CMD}` already passed on this diff and @code-quality has run — incorporate both rather than re-deriving them
 - Provide actionable feedback structured by severity (blocker, concern, suggestion, praise)
 - Post findings as comments on the relevant bmo issue so blockers are visible before the work is closed
 ```
@@ -144,12 +158,14 @@ Requirements:
 Use the @code-quality agent to review readability across this phase:
 
 Review every change made in this phase (`git diff` against the phase start).
+Verification command: {VERIFY_CMD}
 
 Requirements:
 - Apply your system-level criteria across the whole phase diff rather than file by file — naming consistency and module responsibility are only visible across the full change
 - Make direct edits for everything fixable in place
 - Produce a refactoring plan for structural problems too large to edit now
-- Keep behavior identical: `just ci` passed on this diff before you started and must still pass afterward — re-run it when done
+- File each structural finding as its own `discovered` issue carrying its refactoring plan, with the affected files attached — a plan left only in a comment has no owner and is unfindable after the run
+- Keep behavior identical: `{VERIFY_CMD}` passed on this diff before you started and must still pass afterward — re-run it when done
 - Post the refactoring plan as a comment on the relevant bmo issue
 ```
 
@@ -206,6 +222,7 @@ BMO Issue: {ISSUE-ID} — {title}
 Your Agent Reference: {AGENT_REF}
 Description: {full issue description from bmo}
 Scoped files: {scoped files from the issue}
+Verification command: {VERIFY_CMD}
 
 The issue is already claimed under your agent reference {AGENT_REF}. Do not claim it again.
 
@@ -213,7 +230,7 @@ The issue is already claimed under your agent reference {AGENT_REF}. Do not clai
 - Run `bmo comment list {ISSUE-ID}` via Bash to review all comments before starting
 - Do not commit any changes — code must pass @staff-reviewer review before any commit
 - Only modify files within the scoped files listed above
-- Run `just fmt` and `just test` before finishing; the orchestrator gates the whole phase on `just ci`
+- Run the format and test steps of `{VERIFY_CMD}` before finishing; the orchestrator gates the whole phase on the full `{VERIFY_CMD}`
 - When done: `bmo move {ISSUE-ID} --status review` and add a completion comment:
   `bmo comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Completed: summary of changes, files touched, any risks"` via Bash
 - Do not close the issue — closing requires addressing *all* review findings and @staff-reviewer sign-off.
@@ -229,12 +246,13 @@ Use the @qa-engineer agent to verify this work:
 
 BMO Issue: {ISSUE-ID} — {title}
 Description: {full issue description from bmo}
+Verification command: {VERIFY_CMD}
 
 - Run `bmo agent-init` via Bash, then check docs/tdd/, docs/ux/, and docs/spec/ for expected behavior
 - Run `bmo comment list {ISSUE-ID}` via Bash — the @senior-engineer completion comment is your primary context
 - Do not claim or close the issue — QA communicates via comments only
 - Write tests that verify acceptance criteria from the issue description and specs
-- Run existing test suites to check for regressions
+- Run existing test suites to check for regressions, using `{VERIFY_CMD}` or its test step
 - When done, add a comment: `bmo comment add {ISSUE-ID} --author "qa-engineer" --body "QA: summary of tests, coverage, pass/fail results"` via Bash
 - Report bugs as comments on the relevant issue, not as new issues
 - All bmo commands are Bash commands run via the Bash tool
