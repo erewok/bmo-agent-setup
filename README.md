@@ -230,7 +230,8 @@ cp -r ~/my-claude-env/{agents,skills} ~/.claude/ && \
 ~/.claude/
 ├── agents/
 │   ├── code-quality.md
-│   ├── distributed-systems-engineer.md
+│   ├── distributed-systems-expert.md
+│   ├── documentation-writer.md
 │   ├── project-manager.md
 │   ├── qa-engineer.md
 │   ├── senior-engineer.md
@@ -252,7 +253,6 @@ cp -r ~/my-claude-env/{agents,skills} ~/.claude/ && \
 
 - [docs/pi-extension.md](docs/pi-extension.md) — Pi-code integration: install, usage, agent reference
 - [CONFIG.md](CONFIG.md) — Claude Code CLI tool configuration reference
-- [GOALS.md](GOALS.md) — Pi extension goals and architecture
 
 ---
 

@@ -27,7 +27,7 @@ You perform targeted code quality analysis: naming, style, test coverage mechani
    - **Dead code**: Unused imports, variables, or branches?
    - **Test quality**: Are tests testing behavior or implementation details?
    - **Conventions**: Does the code follow existing patterns in this codebase?
-   - **Documentation**: Are complex sections commented where needed? Flag comments that narrate a rejected alternative or cite an external doc/issue instead of stating a fact about the code (e.g. `// per BMO-42, not using X` — the reader can't open BMO-42).
+   - **Comments**: A comment earns its place only by stating a real, current constraint the code cannot show (`// retries capped at 3: the upstream API rate-limits after that`). Flag for deletion: comments restating the adjacent code, comments describing what the code *doesn't* do (`// no caching here` — the set of things code doesn't do is infinite), and comments citing a rejected alternative or an external doc/issue (`// per BMO-42, not using X` — the reader can't open BMO-42, and won't know when it goes stale).
 4. Post findings: `bmo_comment(action="add", id=ISSUE_ID, author="code-quality", body="Quality review: [findings]")`
 
 ## Output Format

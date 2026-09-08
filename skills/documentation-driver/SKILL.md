@@ -30,17 +30,11 @@ If the user chooses "Overwrite all", delete existing spec files before spawning 
 
 ## Execution
 
-### Step 1: Create Team
+### Step 1: Spawn Agents
 
-Use `TeamCreate` with name `documentation-driver` to set up the coordination team.
+**Spawn all agents in the SAME turn** using parallel `Agent` tool calls — one per spec file (5 total, or fewer if skipping existing). This is the entire point of the skill — maximum parallelism. Each agent is a `@staff-architect` (`subagent_type: "staff-architect"`) and receives its spec file's spawning template below. The five specs are independent, so no agent waits on another.
 
-### Step 2: Create Tasks
-
-Use `TaskCreate` to create one task per spec file (5 total, or fewer if skipping existing). No dependencies between tasks — all are independent.
-
-Tasks:
-
-| Task Subject | Spec File |
+| Agent assignment | Spec File |
 |---|---|
 | Generate architecture spec | `docs/spec/architecture.md` |
 | Generate external-contracts spec | `docs/spec/external-contracts.md` |
@@ -48,24 +42,14 @@ Tasks:
 | Generate code-quality spec | `docs/spec/code-quality.md` |
 | Generate testing spec | `docs/spec/testing.md` |
 
-### Step 3: Spawn Agents
+### Step 2: Wait for Completion
 
-**Spawn all agents in the SAME turn** using parallel `Task` tool calls. This is the entire point of the skill — maximum parallelism. Each agent is a `@staff-architect` (`subagent_type: "staff-architect"`).
+Wait for every spawned agent to finish. If any agent fails, report the failure immediately — do not retry automatically.
 
-Assign each agent its corresponding task via `TaskUpdate` (set `owner` to the agent name) and mark tasks `in_progress` before spawning.
-
-### Step 4: Wait for Completion
-
-Poll `TaskList` until all tasks show `completed`. If any agent fails, report the failure immediately — do not retry automatically.
-
-### Step 5: Verify
+### Step 3: Verify
 
 Run `ls docs/spec/` and confirm all expected files exist. Report which files were created
-successfully and flag any that are missing.
-
-### Step 6: Clean Up
-
-Use `TeamDelete` to remove the team. Summarize results to the user.
+successfully and flag any that are missing. Summarize results to the user.
 
 ---
 

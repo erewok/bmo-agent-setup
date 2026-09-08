@@ -140,11 +140,11 @@ A variable that names what you computed is not unnecessary just because it could
 
 Fix: expressions that require re-reading to understand. Extract and name them.
 
-### 13. Comments State Facts About the Code, Not External History
+### 13. A Comment States a Constraint the Code Cannot Show
 
-*Why this matters*: A comment that says what the code doesn't do, or why some other approach was rejected (`// not using a cache here per BMO-42`, `// we decided against X because Y`), forces the reader to either trust an unverifiable claim or go find a document they likely don't have — a TDD, an issue tracker, a conversation. That document will drift or disappear; the comment won't be updated when it does, and the reader has no way to tell it's stale.
+*Why this matters*: Every comment is text the reader must verify against the code. A comment that restates the adjacent code verifies to "redundant"; one that says what the code *doesn't* do verifies against nothing — the set of things any code doesn't do is infinite, so no entry from it informs the reader. And a comment resting on external context (`// not using a cache here per BMO-42`, `// we decided against X`) points at a document that will drift or disappear; the comment won't be updated when it does, and the reader can't tell it's stale.
 
-Fix: comments that reference a decision, a rejected alternative, or an external document instead of describing the code itself. If the underlying constraint is real and current, rewrite it as a fact about the code (`// retries capped at 3: the upstream API rate-limits after that`). If it isn't a fact the reader can verify by reading the file, delete it.
+Fix: delete comments that restate the code, describe what the code doesn't do, or cite a decision, rejected alternative, or external document. If the underlying constraint is real and current, rewrite it as a fact about the code (`// retries capped at 3: the upstream API rate-limits after that`). Keep a warning against a failed alternative only when the failure is invisible from the code and someone would plausibly reinstate it — that case is rare.
 
 ---
 
@@ -156,7 +156,7 @@ Fix: comments that reference a decision, a rejected alternative, or an external 
 
 3. **Read the target code in full context.** If reviewing a diff, run `git diff` and read the complete body of every changed function — not just changed lines.
 
-4. **Apply Phase 2 criteria (1–12)** to each function, starting from outermost public functions and working inward. Fix immediately with Edit.
+4. **Apply Phase 2 criteria (1–13)** to each function, starting from outermost public functions and working inward. Fix immediately with Edit.
 
 5. **Check findings for false positives.** For each finding: is this a genuine readability impediment, or a style preference? Discard style preferences.
 
