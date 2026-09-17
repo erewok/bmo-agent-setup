@@ -86,6 +86,39 @@ Reviews implementation output for readability, clarity, and structural correctne
 
 ---
 
+## Model Routing
+
+Agent definitions carry an optional `model:` field. Where it is absent the agent inherits the
+session's model.
+
+The routing question is not how hard the task is — it is whether anything checks the output.
+Agents whose work is gated by `{VERIFY_CMD}` can run on a cheaper model, because a regression
+surfaces as a failed command rather than as a finding nobody wrote. Agents whose output *is* the
+judgment have no such gate: a cheaper reviewer produces a shorter review, and nothing in the loop
+distinguishes that from a clean diff.
+
+| Agent | Model | Why |
+|---|---|---|
+| `@qa-engineer` | `sonnet` | Writes and runs tests against stated acceptance criteria; the test run is the oracle |
+| `@code-quality` | `sonnet` | Edits are behavior-preserving and re-gated on `{VERIFY_CMD}` |
+| `@documentation-writer` | `sonnet` | No correctness gate needed; prose against a read codebase |
+| `@staff-reviewer` | inherit | Its findings are the only check on whether this was the right change |
+| `@staff-architect` | inherit | A wrong TDD is not caught until the phase it plans has been built |
+| `@project-manager` | inherit | Dependency and file-collision errors cost a whole phase to unwind |
+| `@senior-engineer` | inherit | Writes the code every later stage checks |
+
+Sonnet 5 runs at $3/$15 per million tokens against Opus 5's $5/$25 — roughly 40% cheaper, with
+near-Opus quality on coding and agentic work.
+
+Haiku 4.5 is cheaper again ($1/$5) but is not used here: its 200K context is too small for the
+whole-phase diffs `@code-quality` and `@staff-reviewer` read, and no agent in this roster does
+work mechanical enough to justify it.
+
+A cheaper reviewer is a false economy in this loop. A missed blocker costs a `@senior-engineer`
+re-spawn plus a second verification round, which exceeds what the downgrade saved.
+
+---
+
 ## Skills
 
 | Skill | Description |

@@ -5,7 +5,7 @@ description: >
   project conventions. Complements staff-reviewer review. Use alongside or
   after staff-reviewer for a separate quality-focused pass on implementation
   changes.
-model: claude-haiku-4-5
+model: sonnet
 ---
 
 # Code Quality Reviewer

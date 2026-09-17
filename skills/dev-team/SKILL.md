@@ -37,14 +37,11 @@ All issue tracking flows through **bmo** via Bash (`bmo` commands run via the Ba
 
 `{VERIFY_CMD}` is whatever *this* project runs to prove a change is sound — format check, lints, build, and full test suite in one invocation. Resolve it once during initialization, before spawning any agent, and pass the resolved string into every agent template. Projects name it differently, so discover it rather than assuming:
 
-1. **A task runner with an aggregate recipe** — `justfile` (`just ci`, `just check`), `Makefile` (`make ci`, `make check`), `Taskfile.yml` (`task ci`). Read the file and take the recipe that runs the full set, not one step of it.
-2. **A package script** — `package.json` scripts, matching the runner to the lockfile (`pnpm-lock.yaml` → `pnpm`, `yarn.lock` → `yarn`, otherwise `npm`); `pyproject.toml` with `nox`, `tox`, or `poe`; `Cargo.toml`; `go.mod`.
-3. **The CI workflow itself** — read `.github/workflows/*.yml` (or `.gitlab-ci.yml`, `.circleci/config.yml`) and chain its `run:` steps with `&&`. This is the authoritative answer to "what must pass"; the aggregate recipes above are usually mirroring it anyway.
-4. **The project's own docs** — a Development or Contributing section in `README.md` or `CONTRIBUTING.md`.
+1. **A task runner's aggregate recipe** — `justfile`, `Makefile`, `Taskfile.yml`. Take the recipe that runs the full set, not one step of it.
+2. **A package script** — `package.json` (match the runner to the lockfile), `pyproject.toml`, `Cargo.toml`, `go.mod`.
+3. **The CI workflow** — `.github/workflows/*.yml`, `.gitlab-ci.yml`, `.circleci/config.yml`, with its `run:` steps chained by `&&`. This is the authoritative answer to "what must pass"; the recipes above usually mirror it.
 
-When no aggregate command exists but the individual ones do, chain them yourself and record the chain as `{VERIFY_CMD}`, so every agent is held to the same bar.
-
-If none of the four turn up anything runnable, stop and ask the user for the command instead of guessing. A gate that runs the wrong command — or silently runs nothing — is worse than no gate at all: the phase reports green, and @staff-reviewer has been told the deterministic checks already passed on a diff where they never ran.
+Stop at the first one that resolves. If none do, ask the user rather than guessing — a gate that runs the wrong command, or silently runs nothing, is worse than no gate: the phase reports green and @staff-reviewer is told the deterministic checks passed on a diff where they never ran.
 
 ## Orchestration Patterns
 
@@ -54,10 +51,12 @@ Choose based on task scope. When in doubt, default to Small.
 |---|---|---|
 | **Small** | Bug fix, config change, small feature; no TDD needed | PM → SE → `{VERIFY_CMD}` → Reviewer |
 | **Medium** | Feature/refactor with architectural decisions, data model changes, or cross-cutting concerns | Architect → PM → SE → `{VERIFY_CMD}` → @code-quality → Reviewer → QA |
-| **Large** | Multiple phases with clear dependencies; each phase needs user approval before proceeding | Same as Medium, one phase at a time |
+| **Large** | Multiple phases with clear dependencies | Same as Medium, one phase at a time |
 | **UX-Heavy** | Any work involving user-facing surfaces that need design before technical planning | UX → Architect → PM → SE → `{VERIFY_CMD}` → @code-quality → Reviewer → QA |
 
 Skip TDD (even for Medium) when the work is already well-defined by existing specs.
+
+Every pattern runs one phase at a time and stops at each phase boundary for the user (step 8). For Small that boundary is the end of the run; for anything larger it is where the user reads — and optionally commits — the change while it is still small enough to read.
 
 ## Workflow
 
@@ -84,7 +83,8 @@ Skip TDD (even for Medium) when the work is already well-defined by existing spe
 
    On failure, route the specific failures back to the owning @senior-engineer and re-run `{VERIFY_CMD}` until it passes.
 
-6. **Review.** Spawn @code-quality first, then @staff-reviewer. @staff-reviewer defers readability findings to @code-quality rather than duplicating them, so running it second lets it incorporate that analysis instead of guessing at it. Spawn @code-quality once for the phase against the whole phase diff, not once per issue — its system-level criteria (naming consistency across modules, module responsibility) are only visible across the full change.
+6. **Review.** Spawn @code-quality first, then @staff-reviewer. Both are Agent-tool spawns, not work you do here. @staff-reviewer defers readability findings to @code-quality rather than duplicating them, so running it second lets it incorporate that analysis instead of guessing at it. Spawn @code-quality once for the phase against the whole phase diff, not once per issue — its system-level criteria (naming consistency across modules, module responsibility) are only visible across the full change.
+   - Before closing anything, run `bmo comment list <id>` and confirm a comment authored `staff-reviewer` is present. That comment is the receipt that an independent context reviewed the diff; without it the review did not happen, whatever this session believes about the code. Same check for `code-quality`, and for `qa-engineer` in step 7.
    - Review passes: close each reviewed issue with `bmo close <id>`.
    - Blockers found: read `{PRIOR_AGENT_REF}` from the SE completion comment, then reset the issue:
      ```bash
@@ -98,28 +98,46 @@ Skip TDD (even for Medium) when the work is already well-defined by existing spe
 
 7. **Verify** (Medium+ only). Spawn @qa-engineer to verify acceptance criteria and test coverage. If bugs are found, route back to @senior-engineer for fixes, then re-verify.
 
-8. **Wrap-up.** Run `bmo board --json` to confirm all issues are done. Present a summary: issues completed, files changed, review findings, test results, and discovered work. Tell the user: "All work is complete and reviewed. No changes have been committed. Review with `git diff`."
+8. **Close the phase with the user.** Steps 4-7 are one phase. Stop here — do not roll into the next phase on your own.
+
+   The phase is the unit the user reviews. A run that completes every phase and then presents one large diff has given them nothing to read while it was still small, which is most of the reason for planning in phases at all.
+
+   Present, for this phase only: issues completed with IDs and titles, files changed, blockers found and how they were resolved, QA results, and any `discovered` issues filed. Give them the command that shows this phase's diff — `git diff` for uncommitted work, or `git diff <their last commit>` if they committed an earlier phase themselves. Name the next phase and what it covers. Then wait for a reply.
+
+   Everything in this phase is uncommitted and stays that way. Reviewing and committing are the user's to do; you neither commit nor ask to.
+
+   - **User asks for changes:** route them to a new @senior-engineer on the affected issue via the blocker path in step 6, then return to this checkpoint.
+   - **User wants to change the remaining plan:** re-engage @project-manager to revise the remaining phases, then resume at step 4.
+   - **User says continue:** proceed to step 4 for the next phase.
+
+9. **Wrap-up.** Once no phases remain, run `bmo board --json` to confirm all issues are done. Present a summary across all phases: issues completed, files changed, review findings, and test results. Tell the user: "All work is complete and reviewed. Nothing has been committed — review with `git diff` and commit when you're ready."
    - Report discovered work: run `bmo list --label discovered` and include everything it returns in the summary. Leave it unworked — whether it becomes a new @project-manager planning pass is the user's call.
-   - User wants to modify the plan mid-execution: pause after the current phase, re-engage @project-manager to revise remaining phases, then resume.
 
 ## Rules
 
-1. **Never commit.** No `git add`, `git commit`, or `git push` — committing is irreversible and all work must pass @staff-reviewer review first. Committing is always an explicit user instruction, never automatic.
+1. **Never commit.** No `git add`, `git commit`, or `git push`, at any point, including when the user asks. Committing is the user's own action, not yours. A change you have committed is a change the user can no longer read as a working-tree diff, which is how they review this work — so committing destroys the review, it does not conclude it. This holds at every phase checkpoint and at wrap-up.
 2. **Start with @project-manager.** Always plan before spawning @senior-engineer — unplanned work causes file collisions and scope drift that are costly to undo mid-execution.
    - **One phase at a time.** Issues in different phases share files; running them concurrently causes merge conflicts that are harder to fix than the time saved.
    - **Only @project-manager creates *planned* bmo issues** — consistent issue structure, dependency graphs, and file scoping require the planning context only the PM has. Discovered work is the one exception: any agent may file it with `bmo create -l discovered -s backlog`, unassigned and unworked. Discovered work left in free-text comments has no query that finds it again and is lost the moment the run ends; a labeled backlog issue survives.
    - **Only @project-manager creates dependencies and phases** — the PM has the full scope and context to optimize for parallelism while avoiding file collisions.
 3. **@staff-reviewer reviews all changes** — evaluating security, performance, and architecture correctness requires a reviewer independent of the agent that wrote the code, because @senior-engineer cannot self-certify its own work. Readability belongs to @code-quality's review, not this one. After review, @senior-engineer must fix *all findings* before a task can be completed.
 4. **Run @qa-engineer for all Medium+ tasks** — acceptance criteria verification requires independent testing separate from the implementation pass.
+5. **Do none of their work yourself.** You run `bmo` commands and `{VERIFY_CMD}`, and you read command output. You do not read diffs, write findings, design, or edit code — those are spawns, every time, even when the change is small enough that doing it here would be faster.
+
+   Spawning a reviewer is not double-checking your own work, and the usual advice to keep verification in the main loop does not apply: the value is that the reviewer's context did not produce the code. A review you perform here shares every assumption that produced the diff, which is the one thing a review is for. The same holds for a plan, a design, or a readability pass. Cost is not the tiebreaker — a missed blocker costs a re-spawn plus a second verification round, which is more than the spawn you skipped.
 
 ---
 
 ## Spawning Templates
 
+Each template below is the `prompt` payload for an `Agent` tool call — `Agent(subagent_type: "<name>", prompt: "<the block>")`. The body is addressed to the subagent, not to you: reading it as a checklist and working through it here produces the same text with none of the independence the spawn exists for.
+
 ### @staff-architect
 
+`Agent(subagent_type: "staff-architect", prompt: …)`
+
 ```
-Use the @staff-architect agent to produce a Technical Design Document:
+Produce a Technical Design Document:
 
 <user_request>
 {the user's original request}
@@ -137,10 +155,10 @@ Requirements:
 
 ### @staff-reviewer
 
-```
-Use the @staff-reviewer agent to review implementation changes:
+`Agent(subagent_type: "staff-reviewer", prompt: …)`
 
-Review the changes made by @senior-engineer for this work.
+```
+Review the implementation changes made by @senior-engineer for this work.
 
 Requirements:
 - Review all modified files using git diff
@@ -154,10 +172,10 @@ Requirements:
 
 ### @code-quality
 
-```
-Use the @code-quality agent to review readability across this phase:
+`Agent(subagent_type: "code-quality", prompt: …)`
 
-Review every change made in this phase (`git diff` against the phase start).
+```
+Review readability across every change made in this phase (`git diff` against the phase start).
 Verification command: {VERIFY_CMD}
 
 Requirements:
@@ -171,8 +189,10 @@ Requirements:
 
 ### @project-manager
 
+`Agent(subagent_type: "project-manager", prompt: …)`
+
 ```
-Use the @project-manager agent to decompose this work into bmo issues:
+Decompose this work into bmo issues:
 
 <user_request>
 {the user's original request}
@@ -197,8 +217,10 @@ Requirements:
 
 ### @ux-designer
 
+`Agent(subagent_type: "ux-designer", prompt: …)`
+
 ```
-Use the @ux-designer agent to produce a design spec for this work:
+Produce a design spec for this work:
 
 <user_request>
 {the user's original request}
@@ -215,8 +237,10 @@ Requirements:
 
 ### @senior-engineer
 
+`Agent(subagent_type: "senior-engineer", prompt: …)`
+
 ```
-Use the @senior-engineer agent to complete this issue:
+Complete this issue:
 
 BMO Issue: {ISSUE-ID} — {title}
 Your Agent Reference: {AGENT_REF}
@@ -241,8 +265,10 @@ The issue is already claimed under your agent reference {AGENT_REF}. Do not clai
 
 ### @qa-engineer
 
+`Agent(subagent_type: "qa-engineer", prompt: …)`
+
 ```
-Use the @qa-engineer agent to verify this work:
+Verify this work:
 
 BMO Issue: {ISSUE-ID} — {title}
 Description: {full issue description from bmo}

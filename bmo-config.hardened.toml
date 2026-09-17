@@ -29,7 +29,10 @@ ask = [
     "Bash",
 ]
 
-# Explicitly deny dangerous operations regardless of the rules above
+# Explicitly deny dangerous operations regardless of the rules above.
+# The git entries enforce what the dev-team skill only states in prose: work
+# stays uncommitted so you can read it as a working-tree diff. A commit you
+# didn't make is a diff you can no longer review.
 deny = [
     "Edit(/etc/**)",
     "Edit(/usr/**)",
@@ -39,6 +42,13 @@ deny = [
     "Edit(~/.aws/**)",
     "Bash(rm -rf *)",
     "Bash(sudo *)",
+    "Bash(git add:*)",
+    "Bash(git commit)",
+    "Bash(git commit:*)",
+    "Bash(git push)",
+    "Bash(git push:*)",
+    "Bash(gh pr create)",
+    "Bash(gh pr create:*)",
 ]
 
 # Never allow bypassing permission prompts in this environment

@@ -109,9 +109,21 @@ allow = [
 # regardless of what the classifier would decide.
 ask = []
 
+# The git entries enforce what the dev-team skill only states in prose: work
+# stays uncommitted so you can read it as a working-tree diff. A commit you
+# didn't make is a diff you can no longer review. Claude Code's own guidance
+# gates committing on "only when the user asks", which is a judgment call it
+# regularly gets wrong -- this is the layer that doesn't require judgment.
 deny = [
     "Edit(/etc/**)",
     "Edit(/usr/**)",
+    "Bash(git add:*)",
+    "Bash(git commit)",
+    "Bash(git commit:*)",
+    "Bash(git push)",
+    "Bash(git push:*)",
+    "Bash(gh pr create)",
+    "Bash(gh pr create:*)",
 ]
 
 # Additional directories accessible to agent (optional)

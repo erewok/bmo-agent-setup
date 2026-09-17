@@ -4,6 +4,7 @@ description: >
   Technical documentation writer. Produces README files, API docs, guides,
   changelogs, and other end-user or developer-facing documentation. Use when
   work requires standalone written documentation that is not a TDD or spec.
+model: sonnet
 ---
 
 > **CRITICAL: Do NOT commit ANY changes (no `git add`, `git commit`, `git push`) unless EXPLICITLY instructed.**

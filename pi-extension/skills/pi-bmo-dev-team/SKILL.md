@@ -50,10 +50,12 @@ You spawn each of these with the `subagent` tool and keep bmo in sync; none of t
 |---------|-------------|----------------|
 | **Small** | Bug fix, config, small feature — no TDD needed | PM → SE → `{VERIFY_CMD}` → Reviewer |
 | **Medium** | Feature/refactor with architecture decisions | Architect → PM → SE → `{VERIFY_CMD}` → @code-quality → Reviewer → QA |
-| **Large** | Multiple phases with user approval gates | Same as Medium, one phase at a time |
+| **Large** | Multiple phases with clear dependencies | Same as Medium, one phase at a time |
 | **UX-Heavy** | User-facing work needing design first | UX → Architect → PM → SE → `{VERIFY_CMD}` → @code-quality → Reviewer → QA |
 
 Skip TDD (even for Medium) when the work is already well-defined by existing specs.
+
+Every pattern runs one phase at a time and stops at each phase boundary for the user (step 8). For Small that boundary is the end of the run; for anything larger it is where the user reads — and optionally commits — the change while it is still small enough to read.
 
 ## Workflow
 
@@ -145,6 +147,8 @@ subagent(
 )
 ```
 
+Before closing anything, run `bmo_comment(action="list", id=ISSUE_ID)` and confirm a comment authored `staff-reviewer` is present. That comment is the receipt that an independent context reviewed the diff; without it the review did not happen, whatever this session believes about the code. Same check for `code-quality`, and for `qa-engineer` in step 7.
+
 - **Review passes:** `bmo_close(id=ISSUE_ID)` for each reviewed issue.
 - **Blockers found:** Reset the issue and re-assign:
   ```
@@ -170,7 +174,21 @@ subagent(
 
 If bugs found: route back to @senior-engineer, then re-verify.
 
-### 8. Wrap-up
+### 8. Close the phase with the user
+
+Steps 4-7 are one phase. Stop here — do not roll into the next phase on your own.
+
+The phase is the unit the user reviews. A run that completes every phase and then presents one large diff has given them nothing to read while it was still small, which is most of the reason for planning in phases at all.
+
+Present, for this phase only: issues completed with IDs and titles, files changed, blockers found and how they were resolved, QA results, and any `DISCOVERED:` issues filed. Give them the command that shows this phase's diff — `git diff` for uncommitted work, or `git diff <their last commit>` if they committed an earlier phase themselves. Name the next phase and what it covers. Then wait for a reply.
+
+Everything in this phase is uncommitted and stays that way. Reviewing and committing are the user's to do; you neither commit nor ask to.
+
+- **User asks for changes:** route them to a new @senior-engineer on the affected issue via the blocker path in step 6, then return to this checkpoint.
+- **User wants to change the remaining plan:** re-engage @project-manager to revise the remaining phases, then resume at step 4.
+- **User says continue:** proceed to step 4 for the next phase.
+
+### 9. Wrap-up
 
 ```
 bmo_board()   # confirm all issues are done
@@ -178,19 +196,22 @@ bmo_board()   # confirm all issues are done
 
 Run `bmo_list(status="backlog")` and report every issue whose title begins `DISCOVERED:` — leave it unworked; whether it becomes a new @project-manager planning pass is the user's call.
 
-Present: issues completed, files changed, review findings, test results, and discovered work.
-Tell the user: "All work is complete and reviewed. No changes have been committed. Review with `git diff`."
+Present a summary across all phases: issues completed, files changed, review findings, and test results.
+Tell the user: "All work is complete and reviewed. Nothing has been committed — review with `git diff` and commit when you're ready."
 
 ---
 
 ## Rules
 
-1. **Never commit.** No `git add`, `git commit`, `git push` — committing is always an explicit user instruction.
+1. **Never commit.** No `git add`, `git commit`, or `git push`, at any point, including when the user asks. Committing is the user's own action, not yours. A change you have committed is a change the user can no longer read as a working-tree diff, which is how they review this work — so committing destroys the review, it does not conclude it. This holds at every phase checkpoint and at wrap-up.
 2. **@project-manager plans first.** Always plan before spawning @senior-engineer. Unplanned work causes file collisions.
 3. **One phase at a time.** Issues in different phases share files; running phases concurrently causes merge conflicts.
 4. **Only @project-manager creates *planned* bmo issues** — consistent structure and dependency graphs require the PM's planning context. Discovered work is the one exception: any agent may file it with `bmo_create(title="DISCOVERED: ...", ...)`, unassigned and unworked. Discovered work left in free-text comments has nothing that finds it again and is lost the moment the run ends; a titled backlog issue survives.
 5. **@staff-reviewer reviews all changes** — @senior-engineer cannot self-certify their own work. Readability belongs to @code-quality's review, not that one.
 6. **Run @qa-engineer for all Medium+ tasks** — acceptance criteria verification requires independent testing.
+7. **Do none of their work yourself.** You call `bmo_*` tools and run `{VERIFY_CMD}`, and you read command output. You do not read diffs, write findings, design, or edit code — those are `subagent` calls, every time, even when the change is small enough that doing it here would be faster.
+
+   Spawning a reviewer is not double-checking your own work, and the usual advice to keep verification in the main loop does not apply: the value is that the reviewer's context did not produce the code. A review you perform here shares every assumption that produced the diff, which is the one thing a review is for. The same holds for a plan, a design, or a readability pass. Cost is not the tiebreaker — a missed blocker costs a re-spawn plus a second verification round, which is more than the spawn you skipped.
 
 ---
 

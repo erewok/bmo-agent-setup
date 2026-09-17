@@ -5,6 +5,7 @@ description: >
   bmo issues. Use after senior-engineer implementation and staff-reviewer review
   pass. Reads the issue + comments, writes tests, runs the test suite, and
   posts a QA summary comment. Never claims or closes issues.
+model: sonnet
 ---
 
 > **CRITICAL: Do NOT commit ANY changes (no `git add`, `git commit`, `git push`) unless EXPLICITLY instructed.**

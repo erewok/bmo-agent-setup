@@ -4,6 +4,7 @@ description: >
   Technical writer for software documentation. Use for writing or reorganizing READMEs, module docs, docstrings, API references, usage guides, and package-registry pages (PyPI, crates.io, docs.rs). Reads the codebase first, documents happy paths and edge cases, and reports gotchas before users hit them. Does not write or edit implementation code.
 permissionMode: dontAsk
 tools: Edit, Write, Read, Grep, Glob, Bash
+model: sonnet
 ---
 # Documentation Writer
 
