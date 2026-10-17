@@ -43,6 +43,22 @@ All issue tracking flows through **bmo** via Bash (`bmo` commands run via the Ba
 
 Stop at the first one that resolves. If none do, ask the user rather than guessing — a gate that runs the wrong command, or silently runs nothing, is worse than no gate: the phase reports green and @staff-reviewer is told the deterministic checks passed on a diff where they never ran.
 
+Resolve `{CHECK_CMD}` at the same time: the fast part of `{VERIFY_CMD}` — format check, lints, build — with no tests. In a `justfile` this is usually the `check` recipe. If the project has no such split, `{CHECK_CMD}` is the build-and-lint steps of `{VERIFY_CMD}`, chained by `&&`.
+
+### Who runs what
+
+The full suite runs twice per phase: once at your gate (step 5) and once by @qa-engineer (step 7). Every other run is scoped to what the agent changed. A full run takes minutes, and two full runs catch everything that four would.
+
+| Role | Runs |
+|---|---|
+| @senior-engineer | `{CHECK_CMD}`, and the tests of the packages it changed |
+| You, at the gate | the full `{VERIFY_CMD}`, once every agent in the phase has finished |
+| @code-quality | `{CHECK_CMD}` after its edits; a package's tests only if an edit could change behavior. Edits to comments, names or formatting need only `{CHECK_CMD}`. |
+| @staff-reviewer | nothing; it reads the results |
+| @qa-engineer | the full `{VERIFY_CMD}`, which is the final regression check after @code-quality's edits |
+
+Every agent reports the real exit status of each command. A status read through a pipe, such as `| tail`, is the status of `tail`.
+
 ## Orchestration Patterns
 
 Choose based on task scope. When in doubt, default to Small.
@@ -163,7 +179,7 @@ Review the implementation changes made by @senior-engineer for this work.
 Requirements:
 - Review all modified files using git diff
 - Evaluate across six dimensions: architecture, design, security, operations, performance, testing
-- `{VERIFY_CMD}` already passed on this diff and @code-quality has run — incorporate both rather than re-deriving them
+- `{VERIFY_CMD}` passed at the phase gate, @code-quality has run, and its edits passed `{CHECK_CMD}` — incorporate these rather than re-deriving them. Do not run the test suite: @qa-engineer runs it after you
 - Provide actionable feedback structured by severity (blocker, concern, suggestion, praise)
 - Post findings as comments on the relevant bmo issue so blockers are visible before the work is closed
 ```
@@ -176,14 +192,15 @@ Requirements:
 
 ```
 Review readability across every change made in this phase (`git diff` against the phase start).
-Verification command: {VERIFY_CMD}
+Check command: {CHECK_CMD}
 
 Requirements:
 - Apply your system-level criteria across the whole phase diff rather than file by file — naming consistency and module responsibility are only visible across the full change
 - Make direct edits for everything fixable in place
 - Produce a refactoring plan for structural problems too large to edit now
 - File each structural finding as its own `discovered` issue carrying its refactoring plan, with the affected files attached — a plan left only in a comment has no owner and is unfindable after the run
-- Keep behavior identical: `{VERIFY_CMD}` passed on this diff before you started and must still pass afterward — re-run it when done
+- Keep behavior identical: `{VERIFY_CMD}` passed on this diff before you started. Run `{CHECK_CMD}` when done. Run a package's tests only if an edit could change behavior; edits to comments, names or formatting need only `{CHECK_CMD}`. @qa-engineer runs the full suite after you
+- Report the real exit status of each command you ran
 - Post the refactoring plan as a comment on the relevant bmo issue
 ```
 
@@ -247,6 +264,7 @@ Your Agent Reference: {AGENT_REF}
 Description: {full issue description from bmo}
 Scoped files: {scoped files from the issue}
 Verification command: {VERIFY_CMD}
+Check command: {CHECK_CMD}
 
 The issue is already claimed under your agent reference {AGENT_REF}. Do not claim it again.
 
@@ -254,7 +272,7 @@ The issue is already claimed under your agent reference {AGENT_REF}. Do not clai
 - Run `bmo comment list {ISSUE-ID}` via Bash to review all comments before starting
 - Do not commit any changes — code must pass @staff-reviewer review before any commit
 - Only modify files within the scoped files listed above
-- Run the format and test steps of `{VERIFY_CMD}` before finishing; the orchestrator gates the whole phase on the full `{VERIFY_CMD}`
+- Before finishing, run `{CHECK_CMD}` and the tests of the packages you changed, and report their real exit statuses. Do not run the full suite: the orchestrator gates the whole phase on the full `{VERIFY_CMD}`
 - When done: `bmo move {ISSUE-ID} --status review` and add a completion comment:
   `bmo comment add {ISSUE-ID} --author "{AGENT_REF}" --body "Completed: summary of changes, files touched, any risks"` via Bash
 - Do not close the issue — closing requires addressing *all* review findings and @staff-reviewer sign-off.
@@ -278,7 +296,7 @@ Verification command: {VERIFY_CMD}
 - Run `bmo comment list {ISSUE-ID}` via Bash — the @senior-engineer completion comment is your primary context
 - Do not claim or close the issue — QA communicates via comments only
 - Write tests that verify acceptance criteria from the issue description and specs
-- Run existing test suites to check for regressions, using `{VERIFY_CMD}` or its test step
+- Run the full `{VERIFY_CMD}` once, after your new tests are in, to check for regressions. This is the phase's final full run, after @code-quality's edits. Report its real exit status
 - When done, add a comment: `bmo comment add {ISSUE-ID} --author "qa-engineer" --body "QA: summary of tests, coverage, pass/fail results"` via Bash
 - Report bugs as comments on the relevant issue, not as new issues
 - All bmo commands are Bash commands run via the Bash tool
