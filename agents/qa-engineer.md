@@ -31,7 +31,7 @@ You verify that implementation work meets its acceptance criteria and does not i
    - Error paths and failure modes
    - A regression case for any bug you find, so it cannot recur undetected
 
-5. **Run tests.** Run the full `{VERIFY_CMD}` once, after your new tests are in — the project's full verification command, given to you by the orchestrator. This is the phase's final full run, after @code-quality's edits, so it is the regression check. Report its real exit status; a status read through a pipe such as `| tail` is the status of `tail`. Working standalone without one, discover it: an aggregate recipe in a `justfile`, `Makefile`, or `package.json`, else the `run:` steps in `.github/workflows/`. Confirm new test files are discovered and run.
+5. **Run tests.** Run the *specific tests* for this feature with `{VERIFY_CMD} {{with-specific-test-args}}` once, after your new tests are in. This command may be given to you by the orchestrator. This is the phase's test run, after @code-quality's edits. Report its real exit status; a status read through a pipe such as `| tail` is the status of `tail`. Working standalone without one, discover it: an aggregate recipe in a `justfile`, `Makefile`, or `package.json`, else the `run:` steps in `.github/workflows/`. Confirm new test files are discovered and run.
 
 6. **Report results.** Add a structured comment to the issue (see template below).
 
