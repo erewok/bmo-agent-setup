@@ -166,9 +166,11 @@ Fix: delete comments that restate the code, describe what the code doesn't do, o
 7. **File each structural finding as its own issue.** Structural findings are the ones you could not fix in place, so a comment is where they go to die — nobody is assigned to a comment, and it is unfindable the moment the run ends. Give each one a `discovered` issue carrying its refactoring plan, then attach the files it touches:
 
    ```bash
-   bmo create -l discovered -s backlog -t "Restructure: short title" -d "<the refactoring plan, verbatim>"
+   bmo create -l discovered -s backlog --parent <epic-id> -t "Restructure: short title" -d "<the refactoring plan, verbatim>"
    bmo file add <NEW-ID> <paths the plan touches>
    ```
+
+   The orchestrator gives you the epic ID. `--parent` files the issue under that epic so that the orchestrator's `bmo list --parent <epic-id> --label discovered` finds it. If no epic ID was given, leave out `--parent`.
 
    Leave them unassigned and unworked — whether they enter a plan is the orchestrator's call, not yours. Function-level findings need none of this: you already fixed them.
 

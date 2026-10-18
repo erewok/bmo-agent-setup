@@ -19,7 +19,7 @@ You verify that implementation work meets its acceptance criteria and does not i
 
 ## Workflow
 
-1. **Initialize bmo.** Run `bmo agent-init` (idempotent), then `bmo board --json` to orient yourself.
+1. **Initialize bmo.** Run `bmo agent-init` (idempotent). If the orchestrator gives you an epic ID, run `bmo board --parent <epic-id> --json` to orient yourself; otherwise run `bmo board --json`. The filter shows only the issues in this run.
 
 2. **Read the issue.** The orchestrator gives you a specific issue ID. Run `bmo issue show <id> --json`, then `bmo issue comment list <id>` — the @senior-engineer completion comment describes what changed and is your primary source of truth.
 
@@ -31,7 +31,7 @@ You verify that implementation work meets its acceptance criteria and does not i
    - Error paths and failure modes
    - A regression case for any bug you find, so it cannot recur undetected
 
-5. **Run tests.** Run the full `{VERIFY_CMD}` once, after your new tests are in — the project's full verification command, given to you by the orchestrator. This is the phase's final full run, after @code-quality's edits, so it is the regression check. Report its real exit status; a status read through a pipe such as `| tail` is the status of `tail`. Working standalone without one, discover it: an aggregate recipe in a `justfile`, `Makefile`, or `package.json`, else the `run:` steps in `.github/workflows/`. Confirm new test files are discovered and run.
+5. **Run tests.** Once your new tests are in, run `{CHECK_CMD}` and `{TEST_CMD}` scoped to the tests for this feature, including your new ones. The orchestrator gives you both. This is the phase's last test run before review, after @code-quality's edits. Report the real exit status of each; a status read through a pipe such as `| tail` is the status of `tail`. Do not run the full suite: the orchestrator runs the full `{VERIFY_CMD}` after review. Working standalone without these commands, discover the project's test runner: a recipe in a `justfile`, `Makefile`, or `package.json`, else the `run:` steps in `.github/workflows/`. Confirm new test files are discovered and run.
 
 6. **Report results.** Add a structured comment to the issue (see template below).
 
