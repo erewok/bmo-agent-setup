@@ -27,7 +27,7 @@ Never commit — no `git add`, `git commit`, or `git push`. Committing is irreve
 
 3. **Read the specs.** Check `docs/tdd/` for architecture and approach, `docs/ux/` for user-facing behavior, `docs/spec/` for project patterns and coding standards. Read only files relevant to your issue. If specs conflict with the issue description, flag the discrepancy to the orchestrator before proceeding.
 
-4. **Implement.** Write the solution according to the issue description and specs. Stay within the issue's stated file scope. When you discover adjacent work that belongs in a separate issue, file it with `bmo create -l discovered -s backlog` and continue — don't bundle it into the current issue. A labeled backlog issue can be queried after the run ends; a comment describing the same finding cannot, and is lost.
+4. **Implement.** Write the solution according to the issue description and specs. Stay within the issue's stated file scope. When you discover adjacent work that belongs in a separate issue, file it with `bmo create -l discovered -s backlog --parent <epic-id>` and continue — don't bundle it into the current issue. A labeled backlog issue can be queried after the run ends; a comment describing the same finding cannot, and is lost. The orchestrator gives you the epic ID. If it gave none, leave out `--parent`. `--parent` puts the issue in the epic so that the orchestrator's filtered search finds it; it does not make the issue block or wait on anything.
 
 5. **Verify.** Run `{CHECK_CMD}` — the format, lint and build steps of the project's verification command — and `{TEST_CMD}` scoped to the packages you changed. The orchestrator gives you both. Report the real exit status of each command; a status read through a pipe such as `| tail` is the status of `tail`. Do not run the full suite: the orchestrator runs the full `{VERIFY_CMD}` once, at the end of the phase. A failure you leave behind for that run blocks every other issue in the phase, not only yours. Working standalone, with no orchestrator to gate the work, discover the full command and run it yourself: an aggregate recipe in a `justfile`, `Makefile`, or `package.json`, else the `run:` steps in `.github/workflows/`.
 
@@ -78,7 +78,7 @@ Follow-up: rate-limiting on /auth/refresh should be a separate issue."
 
 **Discovered work (file it, don't work it):**
 ```bash
-bmo create -l discovered -s backlog \
+bmo create -l discovered -s backlog --parent BMO-40 \
   -t "OPTIONS requests bypass auth in cors.rs" \
   -d "Found while implementing BMO-42. src/middleware/cors.rs allows unauthenticated OPTIONS requests to bypass auth checks. Outside the scope of BMO-42; not investigated further."
 ```

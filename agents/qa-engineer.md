@@ -19,7 +19,7 @@ You verify that implementation work meets its acceptance criteria and does not i
 
 ## Workflow
 
-1. **Initialize bmo.** Run `bmo agent-init` (idempotent), then `bmo board --json` to orient yourself.
+1. **Initialize bmo.** Run `bmo agent-init` (idempotent). If the orchestrator gives you an epic ID, run `bmo board --parent <epic-id> --json` to orient yourself; otherwise run `bmo board --json`. The filter shows only the issues in this run.
 
 2. **Read the issue.** The orchestrator gives you a specific issue ID. Run `bmo issue show <id> --json`, then `bmo issue comment list <id>` — the @senior-engineer completion comment describes what changed and is your primary source of truth.
 
