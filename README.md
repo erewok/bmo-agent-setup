@@ -74,16 +74,15 @@ Implements solutions from pre-planned BMO issues. Claims issues atomically with 
 
 ### QA Engineer (`@qa-engineer`)
 
-Verifies implementation against acceptance criteria after the review phase. Writes and runs tests, checks for regressions, and reports results and defects as BMO comments. Does not claim or close issues — communicates via comments only.
+Verifies implementation against acceptance criteria after `@code-quality` and before `@staff-reviewer`. Writes and runs tests, checks for regressions, and reports results and defects as BMO comments. Does not claim or close issues — communicates via comments only.
+
+### Code Quality Reviewer (`@code-quality`)
+
+Reviews implementation output for readability, clarity, and structural correctness. Evaluates naming, function size, single responsibility, module flow, nesting depth, magic values, misplaced code, duplication, and minimum-necessary code. This agent can write and edit code in order to improve it. Like others, it does not commit. Does not review architecture, security, or operational concerns (those belong to `@staff-reviewer`). Used as a feedback loop for `@senior-engineer` output before `@staff-reviewer` review.
 
 ### UX Designer (`@ux-designer`)
 
 Produces UX design specs in `docs/ux/` for user-facing work: UI, CLI commands, API ergonomics, error messages, config formats, and onboarding flows. Designs interaction flows and acceptance criteria before technical planning begins. Never writes implementation code.
-
-### Code Quality Reviewer (`@code-quality`)
-
-Reviews implementation output for readability, clarity, and structural correctness. Evaluates naming, function size, single responsibility, module flow, nesting depth, magic values, misplaced code, duplication, and minimum-necessary code. Read-only — does not write, edit, or commit code. Does not review architecture, security, or operational concerns (those belong to `@staff-reviewer`). Used as a feedback loop for `@senior-engineer` output before `@staff-reviewer` review.
-
 ---
 
 ## Model Routing
@@ -100,7 +99,7 @@ distinguishes that from a clean diff.
 | Agent | Model | Why |
 |---|---|---|
 | `@qa-engineer` | `sonnet` | Writes and runs tests against stated acceptance criteria; the test run is the oracle |
-| `@code-quality` | `sonnet` | Edits are behavior-preserving and re-gated on `{VERIFY_CMD}` |
+| `@code-quality` | `sonnet` | Edits are behavior-preserving, re-tested by `@qa-engineer`, and gated by the phase's `{VERIFY_CMD}` |
 | `@documentation-writer` | `sonnet` | No correctness gate needed; prose against a read codebase |
 | `@staff-reviewer` | inherit | Its findings are the only check on whether this was the right change |
 | `@staff-architect` | inherit | A wrong TDD is not caught until the phase it plans has been built |
