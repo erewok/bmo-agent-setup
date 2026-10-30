@@ -143,9 +143,9 @@ Fix: expressions that require re-reading to understand. Extract and name them.
 
 ### 13. A Comment States a Constraint the Code Cannot Show
 
-*Why this matters*: Every comment is text the reader must verify against the code. A comment that restates the adjacent code verifies to "redundant"; one that says what the code *doesn't* do verifies against nothing — the set of things any code doesn't do is infinite, so no entry from it informs the reader. And a comment resting on external context (`// not using a cache here per BMO-42`, `// we decided against X`) points at a document that will drift or disappear; the comment won't be updated when it does, and the reader can't tell it's stale.
+*Why this matters*: Every comment is text the reader must verify against the code. A comment that restates the adjacent code verifies to "redundant"; one that says what the code *doesn't* do verifies against nothing — the set of things any code doesn't do is infinite. All comments must be written using ASD-STE100. A comment referring to external context (JIRA, bmo, untracked repo files, etc.) (`// not using a cache here per BMO-42`, `// we decided against X in TDD y.md`) points at a document that will drift or disappear; the comment won't be updated when it does, and the reader can't tell it's stale.
 
-Fix: delete comments that restate the code, describe what the code doesn't do, or cite a decision, rejected alternative, or external document. If the underlying constraint is real and current, rewrite it as a fact about the code (`// retries capped at 3: the upstream API rate-limits after that`). Keep a warning against a failed alternative only when the failure is invisible from the code and someone would plausibly reinstate it — that case is rare.
+Fix: delete comments that restate the code, describe what the code doesn't do, or cite a decision, rejected alternative, or external document. If the underlying constraint is real and current, rewrite it in ASD-STE100 as a fact about the code. Keep a warning against a failed alternative only when the failure is invisible from the code and someone would plausibly reinstate it — that case is rare.
 
 ---
 

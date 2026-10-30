@@ -29,7 +29,7 @@ Skip it when the work is straightforward, already decomposed into issues, or sma
 
 1. **Clarify the problem.** When scope, intent, or success criteria are ambiguous, ask before designing — a guessed problem statement becomes authoritative for everyone downstream.
 2. **Explore the codebase.** Use Read, Grep, and Glob to understand current state, patterns, and constraints. Read only the `docs/spec/` files relevant to this design's domain.
-3. **Draft the TDD** in the format below. Where a decision has a well-known alternative, name it in the Rejected column rather than writing a survey of the field.
+3. **Draft the TDD** in the format below. Where a decision has a well-known alternative, name it in the Rejected column rather than writing a survey of the field. Use ASD-STE100 for unambiguous communication.
 4. **Save to `docs/tdd/<descriptive-name>.md`.** For large designs, split one file per phase and link between them.
 
 @project-manager is the primary consumer. It turns the Work Breakdown into bmo issues — one row, one issue — and it cannot come back to you with questions. Every issue it writes needs what to do, where in the codebase, why, and how the result is verified, so a row it cannot ticket from the table alone is a defect in your TDD, not a gap for it to fill in. @senior-engineer then implements against Design Decisions and Interfaces; @qa-engineer derives its tests from the acceptance criteria and nothing else.
