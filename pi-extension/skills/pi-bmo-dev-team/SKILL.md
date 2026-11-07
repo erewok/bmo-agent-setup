@@ -4,7 +4,7 @@ disable-model-invocation: true
 description: >
   Orchestrate a software development agent team: @staff-architect (TDDs + specs),
   @staff-reviewer (code review), @project-manager (bmo planning), @ux-designer (UX specs),
-  @senior-engineer (implementation), @code-quality (readability), @qa-engineer (testing). Use whenever the user wants to plan AND execute work — feature
+  @senior-engineer (implementation), @code-quality (readability). Use whenever the user wants to plan AND execute work — feature
   development, migrations, refactors, bug batches, or any multi-issue project. Trigger on:
   "use the agent team", "plan and execute", "have the team work on", "spin up engineers",
   "run the dev team", "parallel development", "multi-agent execution", or when the user
@@ -28,7 +28,6 @@ agents with `agentScope: "all"` so they find the bundled dev-team agents.
 - Not a planner — @project-manager creates bmo issues and decomposes work
 - Not a designer — @staff-architect produces TDDs; @ux-designer produces UX specs
 - Not a reviewer — @staff-reviewer reviews architecture and risk; @code-quality reviews readability
-- Not a tester — @qa-engineer verifies acceptance criteria
 
 ## Architecture
 
@@ -36,13 +35,11 @@ You spawn each of these with the `subagent` tool and keep bmo in sync; none of t
 
 | Agent | Produces | Constraint |
 |---|---|---|
-| @ux-designer | UX specs in `docs/ux/` | never writes code |
 | @staff-architect | TDDs in `docs/tdd/`, specs in `docs/spec/` | never writes code |
 | @project-manager | the plan, as bmo issues with dependencies and phases | only role that creates *planned* issues |
 | @senior-engineer | implementation | only role that writes code |
 | @code-quality | readability review, applied as direct edits | keeps behavior identical |
 | @staff-reviewer | architecture, security, ops, performance, testing review | posts comments, never edits |
-| @qa-engineer | tests, acceptance-criteria verification | communicates via comments only |
 
 ## Orchestration Patterns
 
@@ -147,7 +144,7 @@ subagent(
 )
 ```
 
-Before closing anything, run `bmo_comment(action="list", id=ISSUE_ID)` and confirm a comment authored `staff-reviewer` is present. That comment is the receipt that an independent context reviewed the diff; without it the review did not happen, whatever this session believes about the code. Same check for `code-quality`, and for `qa-engineer` in step 7.
+Before closing anything, run `bmo_comment(action="list", id=ISSUE_ID)` and confirm a comment authored `staff-reviewer` is present. That comment is the receipt that an independent context reviewed the diff; without it the review did not happen, whatever this session believes about the code. Same check for `code-quality`.
 
 - **Review passes:** `bmo_close(id=ISSUE_ID)` for each reviewed issue.
 - **Blockers found:** Reset the issue and re-assign:
@@ -162,21 +159,9 @@ Before closing anything, run `bmo_comment(action="list", id=ISSUE_ID)` and confi
   Then spawn a new @senior-engineer: "Fix review blockers on BMO-{ID}. Run bmo_comment(action=list) first — blockers are in the staff-reviewer review."
   After fixes, re-run `{VERIFY_CMD}` and then review — a blocker fix can break the build or a test that passed at the phase gate. Do not proceed to QA until both pass.
 
-### 7. Verify (Medium+ only)
+### 7. Close the phase with the user
 
-```
-subagent(
-  agent="qa-engineer",
-  task="Verify acceptance criteria for BMO-{ID}: {title}. Description: {description}",
-  agentScope="all"
-)
-```
-
-If bugs found: route back to @senior-engineer, then re-verify.
-
-### 8. Close the phase with the user
-
-Steps 4-7 are one phase. Stop here — do not roll into the next phase on your own.
+Steps 4-6 are one phase. Stop here — do not roll into the next phase on your own.
 
 The phase is the unit the user reviews. A run that completes every phase and then presents one large diff has given them nothing to read while it was still small, which is most of the reason for planning in phases at all.
 
@@ -188,7 +173,7 @@ Everything in this phase is uncommitted and stays that way. Reviewing and commit
 - **User wants to change the remaining plan:** re-engage @project-manager to revise the remaining phases, then resume at step 4.
 - **User says continue:** proceed to step 4 for the next phase.
 
-### 9. Wrap-up
+### 8. Wrap-up
 
 ```
 bmo_board()   # confirm all issues are done
@@ -208,8 +193,7 @@ Tell the user: "All work is complete and reviewed. Nothing has been committed �
 3. **One phase at a time.** Issues in different phases share files; running phases concurrently causes merge conflicts.
 4. **Only @project-manager creates *planned* bmo issues** — consistent structure and dependency graphs require the PM's planning context. Discovered work is the one exception: any agent may file it with `bmo_create(title="DISCOVERED: ...", ...)`, unassigned and unworked. Discovered work left in free-text comments has nothing that finds it again and is lost the moment the run ends; a titled backlog issue survives.
 5. **@staff-reviewer reviews all changes** — @senior-engineer cannot self-certify their own work. Readability belongs to @code-quality's review, not that one.
-6. **Run @qa-engineer for all Medium+ tasks** — acceptance criteria verification requires independent testing.
-7. **Do none of their work yourself.** You call `bmo_*` tools and run `{VERIFY_CMD}`, and you read command output. You do not read diffs, write findings, design, or edit code — those are `subagent` calls, every time, even when the change is small enough that doing it here would be faster.
+6. **Do none of their work yourself.** You call `bmo_*` tools and run `{VERIFY_CMD}`, and you read command output. You do not read diffs, write findings, design, or edit code — those are `subagent` calls, every time, even when the change is small enough that doing it here would be faster.
 
    Spawning a reviewer is not double-checking your own work, and the usual advice to keep verification in the main loop does not apply: the value is that the reviewer's context did not produce the code. A review you perform here shares every assumption that produced the diff, which is the one thing a review is for. The same holds for a plan, a design, or a readability pass. Cost is not the tiebreaker — a missed blocker costs a re-spawn plus a second verification round, which is more than the spawn you skipped.
 
@@ -364,24 +348,3 @@ The issue is already claimed under {AGENT_REF}. Do not claim again.
 )
 ```
 
-### QA Engineer
-
-```
-subagent(
-  agent="qa-engineer",
-  agentScope="all",
-  task="""
-Verify acceptance criteria for BMO-{ID}: {title}
-
-Description:
-{full issue description}
-
-- Call bmo_agent_init() and check docs/tdd/, docs/ux/, docs/spec/
-- Read all comments: bmo_comment(action="list", id={ID})
-- Write tests that verify each acceptance criterion
-- Run existing test suites to check for regressions
-- Post results: bmo_comment(action="add", id={ID}, author="qa-engineer", body="QA: [summary]")
-- Report bugs as comments on this issue, not as new issues
-"""
-)
-```

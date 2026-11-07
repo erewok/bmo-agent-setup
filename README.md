@@ -72,10 +72,6 @@ Plans and decomposes work into BMO issues. Explores the codebase, creates issue 
 
 Implements solutions from pre-planned BMO issues. Claims issues atomically with `bmo issue claim`, implements within the scoped files, then moves issues to `review` status when done. Does **not** close issues (closing requires `@staff-reviewer` sign-off) and does **not** commit code unless explicitly instructed after review passes.
 
-### QA Engineer (`@qa-engineer`)
-
-Verifies implementation against acceptance criteria after `@code-quality` and before `@staff-reviewer`. Writes and runs tests, checks for regressions, and reports results and defects as BMO comments. Does not claim or close issues — communicates via comments only.
-
 ### Code Quality Reviewer (`@code-quality`)
 
 Reviews implementation output for readability, clarity, and structural correctness. Evaluates naming, function size, single responsibility, module flow, nesting depth, magic values, misplaced code, duplication, and minimum-necessary code. This agent can write and edit code in order to improve it. Like others, it does not commit. Does not review architecture, security, or operational concerns (those belong to `@staff-reviewer`). Used as a feedback loop for `@senior-engineer` output before `@staff-reviewer` review.
@@ -98,8 +94,7 @@ distinguishes that from a clean diff.
 
 | Agent | Model | Why |
 |---|---|---|
-| `@qa-engineer` | `sonnet` | Writes and runs tests against stated acceptance criteria; the test run is the oracle |
-| `@code-quality` | `sonnet` | Edits are behavior-preserving, re-tested by `@qa-engineer`, and gated by the phase's `{VERIFY_CMD}` |
+| `@code-quality` | `sonnet` | Edits are behavior-preserving, and gated by the phase's `{VERIFY_CMD}` |
 | `@documentation-writer` | `sonnet` | No correctness gate needed; prose against a read codebase |
 | `@staff-reviewer` | inherit | Its findings are the only check on whether this was the right change |
 | `@staff-architect` | inherit | A wrong TDD is not caught until the phase it plans has been built |
@@ -144,7 +139,6 @@ todo → in-progress (senior-engineer claims) → review (senior-engineer when d
 | Agent | claim | move to review | close | comment |
 |---|---|---|---|---|
 | **senior-engineer** | ✅ only agent that claims | ✅ when done | ❌ | ✅ |
-| **qa-engineer** | ❌ | ❌ | ❌ | ✅ only |
 | **staff-architect** | ❌ | ❌ | ❌ | ✅ |
 | **staff-reviewer** | ❌ | ❌ | ❌ | ✅ |
 | **project-manager** | ❌ | ❌ | ❌ | ✅ |
@@ -265,7 +259,6 @@ cp -r ~/my-claude-env/{agents,skills} ~/.claude/ && \
 │   ├── distributed-systems-expert.md
 │   ├── documentation-writer.md
 │   ├── project-manager.md
-│   ├── qa-engineer.md
 │   ├── senior-engineer.md
 │   ├── staff-architect.md
 │   ├── staff-reviewer.md

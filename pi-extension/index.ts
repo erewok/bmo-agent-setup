@@ -3,7 +3,7 @@
  *
  * Provides the bmo-aware dev-team agent suite for pi-code:
  *   - `subagent` tool for spawning staff-architect, staff-reviewer,
- *     project-manager, senior-engineer, qa-engineer, ux-designer,
+ *     project-manager, senior-engineer, ux-designer,
  *     code-quality, and documentation-writer agents in isolated pi subprocesses
  *   - Skills: dev-team orchestration workflow, documentation-driver
  *

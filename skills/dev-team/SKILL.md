@@ -2,7 +2,7 @@
 name: dev-team
 disable-model-invocation: true
 description: >
-  Orchestrate a software development agent team consisting of @staff-architect (design), @staff-reviewer (code review), @project-manager (planning), @ux-designer (UX design), @senior-engineer (implementation), @code-quality (readability review), and @qa-engineer (testing). Use this skill whenever the user wants to plan AND execute a body of work using the agent team pattern — including feature development, migrations, refactors, bug fix batches, or any multi-issue project. Use this skill IF the user request benefits from research, planning, multiple independent tasks, and validation. Trigger on phrases like "use the agent team", "plan and execute", "have the team work on", "spin up engineers", "run the dev team on this", or when the user describes work that clearly needs both planning and execution. Also trigger when the user references @project-manager and @senior-engineer together, or asks for "parallel development", "multi-agent execution", or "agent swarm".
+  Orchestrate a software development agent team consisting of @staff-architect (design), @staff-reviewer (code review), @project-manager (planning),@senior-engineer (implementation), and @code-quality (readability review). Use this skill whenever the user wants to plan AND execute a body of work using the agent team pattern — including feature development, migrations, refactors, bug fix batches, or any multi-issue project. Use this skill IF the user requests benefits from research, planning, multiple independent tasks, and validation. Trigger on phrases like "use the agent team", "plan and execute", "have the team work on", "spin up engineers", "run the dev team on this", or when the user describes work that clearly needs both planning and execution. Also trigger when the user references @project-manager and @senior-engineer together, or asks for "parallel development", "multi-agent execution", or "agent swarm".
 ---
 # Dev Team
 
@@ -12,11 +12,10 @@ You do not write code or design systems yourself — you coordinate the right ag
 
 ## What You Are NOT
 
-- Not a coder — @senior-engineer writes all implementation code.
 - Not a planner — @project-manager creates bmo issues and decomposes work.
-- Not a designer — @staff-architect produces TDDs; @ux-designer produces UX specs.
+- Not a coder — @senior-engineer writes all implementation code.
+- Not an architect — @staff-architect produces TDDs.
 - Not a reviewer — @staff-reviewer reviews architecture and risk; @code-quality reviews readability.
-- Not a tester — @qa-engineer verifies acceptance criteria.
 
 ## Architecture
 
@@ -29,8 +28,6 @@ You are the orchestrator. You spawn each of these and keep bmo in sync; none of 
 | @project-manager | the plan, as bmo issues with dependencies and phases | only role that creates *planned* issues |
 | @senior-engineer | implementation | only role that writes code |
 | @code-quality | readability review, applied as direct edits | keeps behavior identical |
-| @qa-engineer | tests, acceptance-criteria verification | communicates via comments only |
-| @ux-designer | UX specs for visual design in `docs/ux/` | never writes code |
 
 All issue tracking flows through **bmo** via Bash (`bmo` commands run via the Bash tool).
 
@@ -42,7 +39,7 @@ All issue tracking flows through **bmo** via Bash (`bmo` commands run via the Ba
 
 ## The Verification Command
 
-`{VERIFY_CMD}` is whatever *this* project runs to prove a change is sound — format check, lints, build, and full test suite in one invocation. It is slow, so only you run it, once per phase, after @staff-reviewer finishes (step 8). No agent runs it. Resolve it once during initialization, before spawning any agent. Projects name it differently, so discover it rather than assuming:
+`{VERIFY_CMD}` is whatever *this* project runs to prove a change is sound — format check, lints, build, and full test suite in one invocation. It is slow, so only you run it, once per phase, after @staff-reviewer finishes (step 7). No agent runs it. Resolve it once during initialization, before spawning any agent. Projects name it differently, so discover it rather than assuming:
 
 1. **A task runner's aggregate recipe** — `justfile`, `Makefile`, `Taskfile.yml`. Take the recipe that runs the full set, not one step of it.
 2. **A package script** — `package.json` (match the runner to the lockfile), `pyproject.toml`, `Cargo.toml`, `go.mod`.
@@ -60,13 +57,12 @@ Stop at the first one that resolves. If none do, ask the user rather than guessi
 
 ### Who runs what
 
-The full `{VERIFY_CMD}` runs once per phase, at your gate (step 8), after @staff-reviewer. Every agent run before that is `{CHECK_CMD}` or a scoped `{TEST_CMD}`. A full run takes minutes; scoped runs take seconds and catch most of what the full run would.
+The full `{VERIFY_CMD}` runs once per phase, at your gate (step 7), after @staff-reviewer. Every agent run before that is `{CHECK_CMD}` or a scoped `{TEST_CMD}`. A full run takes minutes; scoped runs take seconds and catch most of what the full run would.
 
 | Role | Runs |
 |---|---|
 | @senior-engineer | `{CHECK_CMD}`, and `{TEST_CMD}` scoped to the packages it changed |
-| @code-quality | `{CHECK_CMD}` after its edits. If an edit could change behavior, also `{TEST_CMD}` scoped to that package. Edits to comments, names or formatting need only `{CHECK_CMD}`. |
-| @qa-engineer | `{CHECK_CMD}`, and `{TEST_CMD}` scoped to the tests for this change, including its new tests. This is the last test run before review. |
+| @code-quality | `{CHECK_CMD}` after its edits. Edits to comments, names or formatting need only `{CHECK_CMD}`. |
 | @staff-reviewer | nothing; it reads the results |
 | You, at the gate | the full `{VERIFY_CMD}`, once @staff-reviewer has finished |
 
@@ -79,23 +75,21 @@ Choose based on task scope. When in doubt, default to Small.
 | Pattern | When to use | Agent sequence |
 |---|---|---|
 | **Small** | Bug fix, config change, small feature; no TDD needed | @project-manager → @senior-engineer → @code-quality → @staff-reviewer → `{VERIFY_CMD}` |
-| **Medium** | Feature/refactor with architectural decisions, data model changes, or cross-cutting concerns | @staff-architect → @project-manager → @senior-engineer → @code-quality → @qa-engineer  → @staff-reviewer → `{VERIFY_CMD}` |
+| **Medium** | Feature/refactor with architectural decisions, data model changes, or cross-cutting concerns | @staff-architect → @project-manager → @senior-engineer → @code-quality → @staff-reviewer → `{VERIFY_CMD}` |
 | **Large** | Multiple phases with clear dependencies | Same as Medium, one phase at a time |
-| **UX-Heavy** | Any work involving user-facing surfaces that need visual design before technical planning | @ux-designer → Same as Medium |
 
 Skip TDD (even for Medium) when the work is already well-defined by existing specs.
 
-Small skips @qa-engineer (step 6). No pattern skips @code-quality: every code change gets a readability pass, including blocker fixes and gate fixes.
+No pattern skips @code-quality: every code change gets a readability pass, including blocker fixes and gate fixes.
 
-Every pattern runs one phase at a time and stops at each phase boundary for the user (step 10). For Small that boundary is the end of the run; for anything larger it is where the user reads — and optionally commits — the change while it is still small enough to read.
+Every pattern runs one phase at a time and stops at each phase boundary for the user (step 9). For Small that boundary is the end of the run; for anything larger it is where the user reads — and optionally commits — the change while it is still small enough to read.
 
 ## Workflow
 
 1. **Initialize.** Run `bmo agent-init` to verify the database is ready. Run `bmo list -k epic --json` to check for existing epics — don't re-plan work already in bmo. If an epic already covers the request, run `bmo list --parent <epic-id> --json` to see its issues, and give that epic ID to @project-manager in step 3. Resolve `{VERIFY_CMD}`, `{CHECK_CMD}` and `{TEST_CMD}` (see above) now, while nothing is running. Every agent template needs `{CHECK_CMD}` or `{TEST_CMD}`, and the gate needs `{VERIFY_CMD}`. If you discover them mid-phase, agents have already finished without knowing what they were held to.
 
-2. **Design** (Medium+ / UX-Heavy only).
-   - UX-Heavy: Spawn @ux-designer first; wait for the spec in `docs/ux/`.
-   - Medium+: Spawn @staff-architect to produce a TDD in `docs/tdd/`; wait for completion.
+2. **Design** (Medium+).
+   - Spawn @staff-architect to produce a TDD in `docs/tdd/`; wait for completion.
 
 3. **Plan.** Spawn @project-manager with the user's request and any spec/TDD references. When complete, read `{EPIC-ID}` from its report and review the phase plan. Run `bmo plan --parent {EPIC-ID}` — this is the authoritative view of phases derived from the dependency graph. It also lists any open issue outside the epic that blocks one of the epic's issues. For non-trivial work, present the plan to the user and get approval before proceeding. If the PM surfaced investigation needs, spawn @staff-architect to answer them, then pass findings back to the PM for a revised plan.
 
@@ -108,13 +102,12 @@ Every pattern runs one phase at a time and stops at each phase boundary for the 
 
    File collision guard: if two issues in the same phase touch the same file, stop — that is a planning error. Have @project-manager re-analyze and serialize the colliding issues into separate phases before proceeding.
 
-5. **Readability.** Spawn @code-quality once for the phase against the whole phase diff, not once per issue — its system-level criteria (naming consistency across modules, module responsibility) are only visible across the full change. It runs before @qa-engineer so that QA's test run covers its edits.
+5. **Readability.** Spawn @code-quality once for the phase against the whole phase diff, not once per issue — its system-level criteria (naming consistency across modules, module responsibility) are only visible across the full change.
 
-6. **Test** (Medium+ only). Spawn @qa-engineer to verify acceptance criteria and test coverage. Pass it `{CHECK_CMD}` and `{TEST_CMD}`, and tell it to run tests **only** for the changes made, not the full suite. If QA finds bugs, route them to @senior-engineer for fixes, then re-run @qa-engineer.
-
-7. **Review.** Spawn @staff-reviewer. It runs last among the agents so it can incorporate the @code-quality and @qa-engineer comments instead of guessing at them; it defers readability findings to @code-quality rather than duplicating them. These are Agent-tool spawns, not work you do here.
-   - Before moving on, run `bmo comment list <id>` and confirm a comment authored `staff-reviewer` is present. That comment is the receipt that an independent context reviewed the diff; without it the review did not happen, whatever this session believes about the code. Make the same check for `code-quality`, and for `qa-engineer` in Medium+ work.
-   - Review passes: go to step 8.
+6. **Review.** Spawn @staff-reviewer. It runs last among the agents so it can incorporate the @code-quality comments instead of guessing at them; it defers readability findings to @code-quality rather than duplicating them. These are Agent-tool spawns, not work you do here.
+   - Before moving on, run `bmo comment list <id>` and confirm a comment authored `staff-reviewer` is present. That comment is the receipt that an independent context reviewed the diff; without it the review did not happen, whatever this session believes about the code. Make the same check for `code-quality` in Medium+ work.
+   - Review passes: go to step 7.
+   - Not all comments must be pursued, some are extremely rare edge cases. This requires judgment to determine which comments are critical or may require user feedback.
    - Blockers found: read `{PRIOR_AGENT_REF}` from the SE completion comment, then reset the issue:
      ```bash
      bmo move <id> -s todo
@@ -125,14 +118,14 @@ Every pattern runs one phase at a time and stops at each phase boundary for the 
      ```
      Spawn a new @senior-engineer with `NEW_AGENT_REF`: "Fix the review blockers on `{ISSUE-ID}`. Run `bmo comment list {ISSUE-ID}` first — blockers are in the staff-reviewer review comment." The new @senior-engineer runs `{CHECK_CMD}` and its scoped `{TEST_CMD}` as usual. Then spawn @code-quality on the fix, then @staff-reviewer again. Do not proceed to the gate until the review passes cleanly.
 
-8. **Gate on verification.** Once @staff-reviewer has passed every issue in the phase, run `{VERIFY_CMD}`.
+7. **Gate on verification.** Once @staff-reviewer has passed every issue in the phase, run `{VERIFY_CMD}`.
    Run it here, once, rather than inside each agent. It is slow, and parallel agents contend on the same build lock and artifact directory. The agents' `{CHECK_CMD}` and scoped `{TEST_CMD}` runs have already caught most deterministic failures before review; this run catches what scoping missed, such as a test in another package that depends on the changed code.
    - Gate passes: close each issue in the phase with `bmo close <id>`.
-   - Gate fails: route the specific failures to a new @senior-engineer on the owning issue via the blocker path in step 7. That path runs @code-quality and @staff-reviewer on the fix, because a fix made after review is unreviewed code. Then re-run `{VERIFY_CMD}` until it passes.
+   - Gate fails: route the specific failures to a new @senior-engineer on the owning issue via the blocker path in step 6. That path runs @code-quality and @staff-reviewer on the fix, because a fix made after review is unreviewed code. Then re-run `{VERIFY_CMD}` until it passes.
 
-9. **Handle discovered work.** Run `bmo list --parent {EPIC-ID} --label discovered` to find the issues filed during the phase. Any issues labeled `discovered` during the phase should be addressed @senior-engineer with reviews from @code-quality, @staff-reviewer, and @qa-engineer before moving on. Do not attempt to resolve them yourself. Do not close a phase until all discovered work is either resolved or properly routed.
+8. **Handle discovered work.** Run `bmo list --parent {EPIC-ID} --label discovered` to find the issues filed during the phase. Any issues labeled `discovered` during the phase should be addressed @senior-engineer with reviews from @code-quality, and @staff-reviewer before moving on. Do not attempt to resolve them yourself. Do not close a phase until all discovered work is either resolved or properly routed.
 
-10. **Close the phase with the user.** Steps 4-9 are one phase. Stop here — do not roll into the next phase on your own.
+9. **Close the phase with the user.** Steps 4-8 are one phase. Stop here — do not roll into the next phase on your own.
 
    The phase is the unit the user reviews. A run that completes every phase and then presents one large diff has given them nothing to read while it was still small, which is most of the reason for planning in phases at all.
 
@@ -140,11 +133,11 @@ Every pattern runs one phase at a time and stops at each phase boundary for the 
 
    Everything in this phase is uncommitted and stays that way. Reviewing and committing are the user's to do; you neither commit nor ask to.
 
-   - **User asks for changes:** route them to a new @senior-engineer on the affected issue via the blocker path in step 7, then return to this checkpoint.
+   - **User asks for changes:** route them to a new @senior-engineer on the affected issue via the blocker path in step 6, then return to this checkpoint.
    - **User wants to change the remaining plan:** re-engage @project-manager with `{EPIC-ID}` to revise the remaining phases under the same epic, then resume at step 4.
    - **User says continue:** proceed to step 4 for the next phase.
 
-11. **Wrap-up.** Once no phases remain, run `bmo board --parent {EPIC-ID} --json` to confirm all issues are done, then close the epic with `bmo close {EPIC-ID}`. Present a summary across all phases: issues completed, files changed, review findings, and test results. Tell the user: "All work is complete and reviewed. Nothing has been committed — review with `git diff` and commit when you're ready."
+10. **Wrap-up.** Once no phases remain, run `bmo board --parent {EPIC-ID} --json` to confirm all issues are done, then close the epic with `bmo close {EPIC-ID}`. Present a summary across all phases: issues completed, files changed, review findings, and test results. Tell the user: "All work is complete and reviewed. Nothing has been committed — review with `git diff` and commit when you're ready."
    - Report discovered work: run `bmo list --parent {EPIC-ID} --label discovered` and include everything it returns in the summary. Leave it unworked — whether it becomes a new @project-manager planning pass is the user's call.
 
 ## Rules
@@ -156,8 +149,7 @@ Every pattern runs one phase at a time and stops at each phase boundary for the 
    - **Only @project-manager creates dependencies and phases** — the PM has the full scope and context to optimize for parallelism while avoiding file collisions.
 3. **@staff-reviewer reviews all changes** — evaluating security, performance, and architecture correctness requires a reviewer independent of the agent that wrote the code, because @senior-engineer cannot self-certify its own work. Readability belongs to @code-quality's review, not this one. After review, @senior-engineer must fix *all findings* before a task can be completed.
 4. **@code-quality reviews all code changes** — every pattern, every fix. A change that skips it reaches @staff-reviewer and the user unread for readability.
-5. **Run @qa-engineer for all Medium+ tasks** — acceptance criteria verification requires independent testing separate from the implementation pass.
-6. **Do none of their work yourself.** You run `bmo` commands and `{VERIFY_CMD}`, and you read command output. You do not read diffs, write findings, design, or edit code — those are spawns, every time, even when the change is small enough that doing it here would be faster.
+5. **Do none of their work yourself.** You run `bmo` commands and `{VERIFY_CMD}`, and you read command output. You do not read diffs, write findings, design, or edit code — those are spawns, every time, even when the change is small enough that doing it here would be faster.
 
    Spawning a reviewer is not double-checking your own work, and the usual advice to keep verification in the main loop does not apply: the value is that the reviewer's context did not produce the code. A review you perform here shares every assumption that produced the diff, which is the one thing a review is for. The same holds for a plan, a design, or a readability pass. Cost is not the tiebreaker — a missed blocker costs a re-spawn plus a second verification round, which is more than the spawn you skipped.
 
@@ -197,11 +189,11 @@ Review the implementation changes made by @senior-engineer for this work.
 
 Requirements:
 - Review all modified files using git diff
-- Evaluate across six dimensions: architecture, design, security, operations, performance, testing
-- Every agent before you passed `{CHECK_CMD}` and the tests scoped to its changes. @code-quality has run{Medium+: ", and so has @qa-engineer"}; their bmo comments hold their findings{Medium+: " and test results"}. Incorporate these rather than re-deriving them
+- Evaluate across six dimensions: architecture, design, security, operations, performance, testing.
+- Every agent before you passed `{CHECK_CMD}` and the tests scoped to its changes. @code-quality has run{Medium+: "}; their bmo comments hold their findings{Medium+: " and test results"}. Incorporate these rather than re-deriving them
 - Do not run tests or `{VERIFY_CMD}`: the orchestrator runs the full `{VERIFY_CMD}` after your review
 - Provide actionable feedback structured by severity (blocker, concern, suggestion, praise)
-- Post findings as comments on the relevant bmo issue so blockers are visible before the work is closed
+- Post findings as comments on the relevant bmo issue so blockers are visible before the work is closed.
 ```
 
 
@@ -221,7 +213,7 @@ Requirements:
 - Make direct edits for everything fixable in place
 - Produce a refactoring plan for structural problems too large to edit now
 - File each structural finding as its own `discovered` issue carrying its refactoring plan, with `--parent {EPIC-ID}` and the affected files attached — a plan left only in a comment has no owner and is unfindable after the run
-- Keep behavior identical. Run `{CHECK_CMD}` when done. If an edit could change behavior, also run `{TEST_CMD}` scoped to that package; edits to comments, names or formatting need only `{CHECK_CMD}`. Do not run the full suite: @qa-engineer runs the tests for this change after you, and the orchestrator runs the full `{VERIFY_CMD}` at the end of the phase
+- Keep behavior identical. Run `{CHECK_CMD}` when done. If an edit could change behavior, also run `{TEST_CMD}` scoped to that package; edits to comments, names or formatting need only `{CHECK_CMD}`. Do not run the full suite. The orchestrator runs the full `{VERIFY_CMD}` at the end of the phase
 - Report the real exit status of each command you ran
 - Post the refactoring plan as a comment on the relevant bmo issue
 ```
@@ -256,26 +248,6 @@ Requirements:
 - Provide the epic ID and the complete phase plan (`bmo plan --parent <epic-id>`) as your final output
 ```
 
-### @ux-designer
-
-`Agent(subagent_type: "ux-designer", prompt: …)`
-
-```
-Produce a design spec for this work:
-
-<user_request>
-{the user's original request}
-</user_request>
-
-Requirements:
-- Explore the codebase using Read, Grep, Glob, and Bash to understand current patterns
-- Produce a design spec following the standard format in your agent instructions
-- Save the completed spec to docs/ux/{descriptive-name}.md
-- Include concrete success criteria, interaction flows, and edge cases
-- Include a Handoff Notes section with component breakdown and implementation priorities
-- Do not write implementation code — the spec is the deliverable
-```
-
 ### @senior-engineer
 
 `Agent(subagent_type: "senior-engineer", prompt: …)`
@@ -306,27 +278,3 @@ The issue is already claimed under your agent reference {AGENT_REF}. Do not clai
 - All bmo commands are Bash commands run via the Bash tool
 ```
 
-### @qa-engineer
-
-`Agent(subagent_type: "qa-engineer", prompt: …)`
-
-```
-Verify this work:
-
-BMO Issue: {ISSUE-ID} — {title}
-Epic: {EPIC-ID}
-Description: {full issue description from bmo}
-Check command: {CHECK_CMD}
-Test command: {TEST_CMD}
-
-- Run `bmo agent-init` via Bash, then check docs/tdd/, docs/ux/, and docs/spec/ for expected behavior
-- If you need the board, filter it: `bmo board --parent {EPIC-ID}`
-- Run `bmo comment list {ISSUE-ID}` via Bash — the @senior-engineer completion comment is your primary context
-- Do not claim or close the issue — QA communicates via comments only
-- Write tests that verify acceptance criteria from the issue description and specs
-- Once your new tests are in, run `{CHECK_CMD}` and `{TEST_CMD}` scoped to the tests for this change, including your new ones. This is the phase's last test run before review, after @code-quality's edits. Report each real exit status
-- Do not run the full suite: the orchestrator runs the full `{VERIFY_CMD}` after review
-- When done, add a comment: `bmo comment add {ISSUE-ID} --author "qa-engineer" --body "QA: summary of tests, coverage, pass/fail results"` via Bash
-- Report bugs as comments on the relevant issue, not as new issues
-- All bmo commands are Bash commands run via the Bash tool
-```

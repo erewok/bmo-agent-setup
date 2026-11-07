@@ -12,7 +12,7 @@ Installing the extension gives you:
 | **`subagent` tool** | Spawn any dev-team agent in an isolated pi subprocess with a single tool call |
 | **`pi-bmo-dev-team` skill** | `/skill:pi-bmo-dev-team` — full orchestration: design → plan → implement → review → QA |
 | **`pi-bmo-documentation-driver` skill** | `/skill:pi-bmo-documentation-driver` — generate all five `docs/spec/` files in parallel |
-| **9 specialist agents** | `staff-architect`, `staff-reviewer`, `project-manager`, `senior-engineer`, `qa-engineer`, `ux-designer`, `code-quality`, `documentation-writer`, `distributed-systems-expert` |
+| **9 specialist agents** | `staff-architect`, `staff-reviewer`, `project-manager`, `senior-engineer`, `ux-designer`, `code-quality`, `documentation-writer`, `distributed-systems-expert` |
 
 The `bmo_*` tools, board context injection, status widget, and `/bmo-*` slash commands
 come from the [pi-bmo](https://github.com/erewok/pi-bmo) extension, **which must be
@@ -116,8 +116,7 @@ The skill picks a pattern automatically based on scope:
 7. **Reviews** — spawns `code-quality` for readability, then `staff-reviewer` for
    architecture and risk; posts findings as bmo comments; blockers route back to the
    responsible engineer
-8. **Verifies** (Medium+) — spawns `qa-engineer` to check acceptance criteria
-9. **Reports** — summarizes what was done, lists any `DISCOVERED:` issues agents filed
+8. **Reports** — summarizes what was done, lists any `DISCOVERED:` issues agents filed
    along the way, and reminds you nothing has been committed
 
 ### What to expect
@@ -197,11 +196,6 @@ The only agent that creates bmo issues. Never writes code.
 
 Implements from a bmo issue within the scoped files. Claims the issue before starting,
 moves to review when done, never closes or self-reviews.
-
-### `qa-engineer`
-
-Verifies acceptance criteria after implementation and review. Writes tests, runs the
-suite, posts results as bmo comments. Never claims or closes issues.
 
 ### `ux-designer`
 
