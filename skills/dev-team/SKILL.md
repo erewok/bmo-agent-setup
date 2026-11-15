@@ -149,6 +149,7 @@ Every pattern runs one phase at a time and stops at each phase boundary for the 
    - **Only @project-manager creates dependencies and phases** — the PM has the full scope and context to optimize for parallelism while avoiding file collisions.
 3. **@staff-reviewer reviews all changes** — evaluating security, performance, and architecture correctness requires a reviewer independent of the agent that wrote the code, because @senior-engineer cannot self-certify its own work. Readability belongs to @code-quality's review, not this one. After review, @senior-engineer must fix *all findings* before a task can be completed.
 4. **@code-quality reviews all code changes** — every pattern, every fix. A change that skips it reaches @staff-reviewer and the user unread for readability.
+   - **Docs carry a fact list.** Every agent that writes or changes docs returns a list of the facts it wrote, each with the code that proves it (`path:function`, query file, test). @code-quality confirms each fact against that code and deletes each fact without proof. A plan, TDD or issue is never proof of a doc fact: docs written from plans state what was intended, not what was built. Writers are unreliable at this, so the check is structural, not a request for care.
 5. **Do none of their work yourself.** You run `bmo` commands and `{VERIFY_CMD}`, and you read command output. You do not read diffs, write findings, design, or edit code — those are spawns, every time, even when the change is small enough that doing it here would be faster.
 
    Spawning a reviewer is not double-checking your own work, and the usual advice to keep verification in the main loop does not apply: the value is that the reviewer's context did not produce the code. A review you perform here shares every assumption that produced the diff, which is the one thing a review is for. The same holds for a plan, a design, or a readability pass. Cost is not the tiebreaker — a missed blocker costs a re-spawn plus a second verification round, which is more than the spawn you skipped.
@@ -211,6 +212,7 @@ Test command: {TEST_CMD}
 Requirements:
 - Apply your system-level criteria across the whole phase diff rather than file by file — naming consistency and module responsibility are only visible across the full change
 - Make direct edits for everything fixable in place
+- If the phase changed docs or doc comments, confirm each doc fact against the code that the writer's fact list cites; fix or delete each fact without proof, and list them
 - Produce a refactoring plan for structural problems too large to edit now
 - File each structural finding as its own `discovered` issue carrying its refactoring plan, with `--parent {EPIC-ID}` and the affected files attached — a plan left only in a comment has no owner and is unfindable after the run
 - Keep behavior identical. Run `{CHECK_CMD}` when done. If an edit could change behavior, also run `{TEST_CMD}` scoped to that package; edits to comments, names or formatting need only `{CHECK_CMD}`. Do not run the full suite. The orchestrator runs the full `{VERIFY_CMD}` at the end of the phase

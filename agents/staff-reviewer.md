@@ -115,5 +115,5 @@ LGTM — [one line on what was verified]
 - [ ] Error handling covers the failure modes
 - [ ] Observability exists for new code paths
 - [ ] Tests cover critical paths and edge cases
-- [ ] Documentation updated where needed
+- [ ] Documentation updated where needed, and each changed doc fact has a citation to the code that proves it
 ```

@@ -159,11 +159,13 @@ Fix: delete comments that restate the code, describe what the code doesn't do, o
 
 4. **Apply Phase 2 criteria (1–13)** to each function, starting from outermost public functions and working inward. Fix immediately with Edit.
 
-5. **Check findings for false positives.** For each finding: is this a genuine readability impediment, or a style preference? Discard style preferences.
+5. **Check each doc fact against the code.** If the change touches docs or doc comments, take the writer's fact list, or build one from the diff. For each fact, open the cited code and confirm it. Fix each false fact, delete each fact that has no proof, and list both in your report. Readable text that states a false fact is the worst kind of doc, because the reader trusts it.
 
-6. **Report.** Structural findings first — each with a concrete, step-by-step refactoring plan naming which modules to split, merge, rename, or reorganize. Function-level findings second.
+6. **Check findings for false positives.** For each finding: is this a genuine readability impediment, or a style preference? Discard style preferences.
 
-7. **File each structural finding as its own issue.** Structural findings are the ones you could not fix in place, so a comment is where they go to die — nobody is assigned to a comment, and it is unfindable the moment the run ends. Give each one a `discovered` issue carrying its refactoring plan, then attach the files it touches:
+7. **Report.** Structural findings first — each with a concrete, step-by-step refactoring plan naming which modules to split, merge, rename, or reorganize. Function-level findings second.
+
+8. **File each structural finding as its own issue.** Structural findings are the ones you could not fix in place, so a comment is where they go to die — nobody is assigned to a comment, and it is unfindable the moment the run ends. Give each one a `discovered` issue carrying its refactoring plan, then attach the files it touches:
 
    ```bash
    bmo create -l discovered -s backlog --parent <epic-id> -t "Restructure: short title" -d "<the refactoring plan, verbatim>"
